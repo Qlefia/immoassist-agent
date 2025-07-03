@@ -236,6 +236,6 @@ if __name__ == "__main__":
     print("\nGenerated Agent Card:")
     print(card_json)
     
-    print("\n✅ A2A Agent Card created successfully!")
-    print("🔗 Ready for agent-to-agent communication")
-    print("📍 Discovery endpoint: /.well-known/agent.json") 
+    print("\nA2A Agent Card created successfully!")
+    print("Ready for agent-to-agent communication")
+    print("Discovery endpoint: /.well-known/agent.json") 
