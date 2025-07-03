@@ -1,302 +1,452 @@
 # ImmoAssist AI Agent
 
-KI-gestützter Immobilienberater für Investitionen in deutsche Neubauimmobilien, entwickelt mit Google Agent Development Kit (ADK).
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Google ADK](https://img.shields.io/badge/Google_ADK-1.5.0+-green.svg)](https://google.github.io/adk-docs/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-## 🏠 Über ImmoAssist
+**Enterprise-grade AI agent for German real estate investment consulting, built with Google Agent Development Kit (ADK) and multi-agent architecture.**
 
-ImmoAssist ist ein spezialisierter AI-Agent, der Kunden bei Investitionen in deutsche Neubauimmobilien berät. Der Agent bietet:
+## Overview
 
-- **24/7 Beratung** zu Immobilieninvestments
-- **Automatische Berechnungen** von Rentabilität und Finanzierung
-- **Personalisierte Empfehlungen** basierend auf Kundenprofil
-- **Integrierte Wissensdatenbank** mit FAQ und Handbuch
-- **Multimodale Kommunikation** (Text, Sprache, Avatar)
+ImmoAssist is a specialized AI agent system that provides comprehensive consultation for investments in German new construction real estate. The system features a sophisticated multi-agent architecture with domain-specific specialists and enterprise-grade capabilities.
 
-## 🚀 Features
+### Key Features
 
-### Kernfunktionen
+- **Multi-Agent Architecture**: Coordinated specialist agents for different domains
+- **24/7 Consultation**: Automated real estate investment advisory
+- **Financial Calculations**: Advanced ROI and cash flow analysis
+- **Personalized Recommendations**: AI-driven property matching
+- **Knowledge Base Integration**: Comprehensive FAQ and handbook system
+- **Multi-Language Support**: German, English, and Russian interfaces
 
-- ✅ Immobiliensuche und -bewertung
-- ✅ Investitionsrentabilität-Berechnungen
-- ✅ Steuerliche Optimierung (5% Sonder-AfA)
-- ✅ Benutzerprofil und Präferenzen-Management
-- ✅ Langzeit- und Kurzzeitgedächtnis
-- ✅ FAQ und Handbuch-Integration
+### Core Capabilities
 
-### Integrationen
+- Real estate search and valuation
+- Investment profitability calculations
+- Tax optimization (5% special depreciation)
+- User profile and preferences management
+- Long-term and short-term memory
+- FAQ and handbook integration
 
-- 🔄 **HeyGen**: Avatar-basierte Kommunikation
-- 🔊 **ElevenLabs**: Text-zu-Sprache Synthese
-- 📅 **Terminbuchung**: Automatische Beratungstermine
-- 📧 **Email-Benachrichtigungen**: Berichte und Erinnerungen
-- 🏢 **3D-Visualisierung**: Immobilien-Tours
+## Architecture
 
-### Technische Features
+```mermaid
+graph TB
+    subgraph "ImmoAssist Multi-Agent System"
+        PA[Philipp - Root Agent<br/>Coordinator & Consultant]
 
-- 🧠 **Google Gemini 2.5 Pro** als LLM
-- 🛠️ **Google ADK Framework**
-- 📊 **Vertex AI** für Deployment
-- 🔍 **Google Search** Integration
-- 💾 **PostgreSQL** für Benutzerdaten
-- 🔐 **Google Cloud** Sicherheit
+        subgraph "Specialist Agents"
+            KA[Knowledge Agent<br/>FAQ & Handbooks]
+            PR[Property Agent<br/>Search & Analysis]
+            CA[Calculator Agent<br/>Financial Calculations]
+            AN[Analytics Agent<br/>Market Intelligence]
+        end
 
-## 📋 Voraussetzungen
+        subgraph "Infrastructure"
+            ADK[Google ADK Framework]
+            VAI[Vertex AI Platform]
+            RAG[RAG Engine]
+            DB[(PostgreSQL)]
+        end
+    end
 
-- Python 3.11+
-- Poetry (für Dependency Management)
-- Google Cloud Projekt mit aktivierten APIs
-- Optional: PostgreSQL für Produktionsdaten
+    PA --> KA
+    PA --> PR
+    PA --> CA
+    PA --> AN
 
-## 🛠️ Installation
+    KA --> RAG
+    PR --> VAI
+    CA --> VAI
+    AN --> VAI
 
-### 1. Repository klonen
+    PA --> DB
+```
 
-\`\`\`bash
-git clone https://github.com/your-org/immoassist-agent.git
-cd immoassist-agent
-\`\`\`
+### Technology Stack
 
-### 2. Dependencies installieren
+- **Framework**: Google Agent Development Kit (ADK) 1.5+
+- **AI Platform**: Vertex AI with Gemini 2.5 Pro
+- **Deployment**: Google Cloud Platform
+- **Search**: Vertex AI RAG Engine
+- **Database**: PostgreSQL for user data
+- **Security**: Google Cloud IAM and authentication
 
-\`\`\`bash
+## Quick Start
 
-# Poetry installieren falls nicht vorhanden
+### Prerequisites
 
-pip install poetry
+- Python 3.11 or higher
+- Google Cloud Project with enabled APIs
+- Poetry (recommended) or pip for dependency management
 
-# Virtual Environment erstellen und Dependencies installieren
+### Installation
 
-poetry install
-\`\`\`
+1. **Clone the repository**
 
-### 3. Umgebung konfigurieren
+   ```bash
+   git clone https://github.com/immoassist/immoassist-agent.git
+   cd immoassist-agent
+   ```
 
-\`\`\`bash
+2. **Install dependencies**
 
-# .env Datei erstellen
+   ```bash
+   # Using Poetry (recommended)
+   poetry install
 
-cp .env.example .env
+   # Or using pip
+   pip install -r requirements.txt
+   ```
 
-# Konfiguration anpassen
+3. **Configure environment**
 
-nano .env
-\`\`\`
+   ```bash
+   # Copy environment template
+   cp environment.config.template .env
 
-### 4. Google Cloud Setup
+   # Edit configuration
+   nano .env
+   ```
 
-\`\`\`bash
+4. **Set up Google Cloud authentication**
 
-# Google Cloud CLI authentifizieren
+   ```bash
+   # Authenticate with Google Cloud
+   gcloud auth application-default login
+   gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 
-gcloud auth application-default login
-gcloud auth application-default set-quota-project YOUR_PROJECT_ID
+   # Enable required APIs
+   gcloud services enable aiplatform.googleapis.com
+   gcloud services enable storage.googleapis.com
+   ```
 
-# Erforderliche APIs aktivieren
+### Running the Agent
 
-gcloud services enable aiplatform.googleapis.com
-gcloud services enable storage.googleapis.com
-\`\`\`
+#### Local Development
 
-## 🏃‍♂️ Agent starten
-
-### Lokaler Start mit CLI
-
-\`\`\`bash
-
-# Virtual Environment aktivieren
-
+```bash
+# Activate virtual environment
 poetry shell
 
-# Agent im CLI-Modus starten
+# Start the agent
+adk web --port 8000
+```
 
-adk run immoassist_agent
-\`\`\`
+#### Web Interface
 
-### Web Interface
+Open your browser and navigate to:
 
-\`\`\`bash
+```
+http://localhost:8000/dev-ui/?app=immoassist_agent
+```
 
-# Web-Interface starten
+## Configuration
 
-adk web
-\`\`\`
+### Environment Variables
 
-Dann öffnen Sie http://localhost:8080 und wählen Sie "immoassist_agent" aus dem Dropdown.
+Create a `.env` file with the following configuration:
 
-## 💬 Beispiel-Interaktionen
+```bash
+# Google Cloud Configuration
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=europe-west1
+GOOGLE_GENAI_USE_VERTEXAI=True
 
-### Immobiliensuche
+# Model Configuration
+MODEL_NAME=gemini-2.5-pro
 
-\`\`\`
-Benutzer: "Ich suche eine 2-Zimmer-Wohnung in München für maximal 300.000 Euro"
+# Optional: RAG Configuration
+RAG_CORPUS=projects/your-project/locations/europe-west1/ragCorpora/your-corpus
 
-Agent: "Gerne helfe ich Ihnen bei der Suche! Ich habe eine passende 2-Zimmer-Wohnung in München-Schwabing gefunden:
+# Server Configuration
+PORT=8000
+```
 
-🏠 **Moderne 2-Zimmer-Wohnung in München**
-📍 Leopoldstraße 125, 80809 München
-💰 285.000 € (unter Prospektpreis!)
-📐 65 qm, Energieklasse A+
-🏗️ Fertigstellung 2024
-✅ 12 Monate Erstvermietungsgarantie
-✅ 5 Jahre Bauträger-Gewährleistung
+### Google Cloud Setup
 
-Monatliche Kosten nach Steuervorteilen: nur 180 €
-Soll ich eine detaillierte Rentabilitätsberechnung erstellen?"
-\`\`\`
+1. **Create a Google Cloud Project**
+2. **Enable required APIs**:
+   - Vertex AI API
+   - Cloud Storage API
+   - Firestore API (optional)
+3. **Set up authentication**:
+   - Service account key or Application Default Credentials
+4. **Configure IAM roles**:
+   - `roles/aiplatform.user`
+   - `roles/storage.objectViewer`
 
-### Investitionsberechnung
+## Usage Examples
 
-\`\`\`
-Benutzer: "Ja, bitte berechne die Rentabilität für diese Wohnung"
+### Basic Consultation
 
-Agent: [Verwendet calculate_investment_return Tool]
+```python
+# Example interaction in German
+user_input = "Ich suche eine 2-Zimmer-Wohnung in München für 300.000 Euro"
 
-"📊 **Detaillierte Investitionsanalyse**
+# Agent response includes:
+# - Property search results
+# - Financial analysis
+# - Tax optimization recommendations
+# - Next steps
+```
 
-**Einmalige Kosten:**
+### Investment Calculation
 
-- Kaufpreis: 285.000 €
-- Eigenkapital (min.): 15.000 €
-- Nebenkosten: 28.500 €
+```python
+# Request financial analysis
+user_input = "Berechne die Rentabilität für diese Wohnung"
 
-**Monatliche Bilanz:**
+# Agent provides:
+# - ROI calculations
+# - Cash flow projections
+# - Tax benefit analysis (5% Sonder-AfA)
+# - Risk assessment
+```
 
-- Mieteinnahmen: 1.200 €
-- Darlehensrate: -950 €
-- Nebenkosten: -200 €
-- **Steuerersparnis (5% Sonder-AfA): +498 €**
-- **Monatliches Plus: +548 €**
+### Multi-Language Support
 
-**Langfristige Prognose:**
-✅ Eigenkapital-Rückholung in 4 Jahren
-✅ 10-Jahres-Gewinn: ca. 130.000 €
-✅ Jährliche Rendite: 15,8%"
-\`\`\`
+The agent automatically detects and responds in the user's language:
 
-## 🏗️ Architektur
+- **German**: Native-level consultation
+- **Russian**: "Здравствуйте! Меня зовут Филипп..."
+- **English**: "Hello! My name is Philipp..."
 
-\`\`\`
-ImmoAssist Agent
-├── Main Agent (LlmAgent)
-│ ├── Gemini 2.5 Pro Model
-│ └── System Prompt (German)
-├── Tools
-│ ├── Property Tools
-│ │ ├── search_properties()
-│ │ ├── get_property_details()
-│ │ └── calculate_investment_return()
-│ ├── User Tools
-│ │ ├── get_user_profile()
-│ │ ├── save_user_calculation()
-│ │ └── get_user_history()
-│ ├── Knowledge Tools
-│ │ ├── search_faq()
-│ │ └── search_handbook()
-│ └── Integration Tools
-│ ├── send_heygen_avatar_message()
-│ ├── generate_elevenlabs_audio()
-│ └── create_appointment_link()
-└── External Services
-├── Google Cloud (Vertex AI, Storage)
-├── HeyGen API (Avatar)
-├── ElevenLabs API (TTS)
-└── PostgreSQL (User Data)
-\`\`\`
+## Development
 
-## 📊 Deployment
+### Project Structure
 
-### Google Agent Engine
+```
+immoassist/
+├── immoassist_agent/           # Main agent package
+│   ├── multi_agent_architecture.py  # Core multi-agent system
+│   ├── a2a_agent_card.py      # A2A protocol support
+│   ├── true_rag_agent.py      # RAG implementation
+│   └── tools/                 # Agent tools
+├── data/                      # Knowledge base
+│   ├── FAQ/                   # Frequently asked questions
+│   └── Handbücher/           # German real estate handbooks
+├── tests/                     # Test suite
+├── vector_store/              # Vector database
+├── .env                       # Environment configuration
+├── pyproject.toml             # Project configuration
+└── requirements.txt           # Production dependencies
+```
 
-\`\`\`bash
+### Development Setup
 
-# Wheel-Datei erstellen
+```bash
+# Install development dependencies
+poetry install --with dev
 
-poetry build --format=wheel --output=deployment
+# Install pre-commit hooks
+pre-commit install
 
-# Zu Agent Engine deployen
+# Run tests
+pytest
 
-cd deployment
-python deploy.py
-\`\`\`
+# Format code
+black .
+ruff check --fix .
 
-### Cloud Run
+# Type checking
+mypy immoassist_agent/
+```
 
-\`\`\`bash
+### Code Quality Standards
 
-# Docker Image erstellen
+- **Code Formatting**: Black with 88-character line length
+- **Linting**: Ruff with comprehensive rule set
+- **Type Checking**: mypy with strict configuration
+- **Testing**: pytest with asyncio support
+- **Pre-commit Hooks**: Automated code quality checks
 
-docker build -t gcr.io/YOUR_PROJECT/immoassist-agent .
+## Deployment
 
-# Zu Cloud Run deployen
+### Local Development
 
-gcloud run deploy immoassist-agent \\
---image gcr.io/YOUR_PROJECT/immoassist-agent \\
---platform managed \\
---region us-central1
-\`\`\`
+```bash
+# Start development server
+adk web --host localhost --port 8000
+```
 
-## 🧪 Testing
+### Google Cloud Run
 
-\`\`\`bash
+```bash
+# Build and deploy
+gcloud run deploy immoassist-agent \
+  --source . \
+  --port=8080 \
+  --allow-unauthenticated \
+  --region=europe-west1 \
+  --memory=2Gi \
+  --cpu=1 \
+  --min-instances=1 \
+  --max-instances=10
+```
 
-# Unit Tests
+### Vertex AI Agent Engine
 
-pytest tests/unit
+```bash
+# Package for Agent Engine
+poetry build --format=wheel
 
-# Integration Tests
+# Deploy to Agent Engine
+# (Refer to MULTI_AGENT_DEPLOYMENT_GUIDE.md for detailed instructions)
+```
 
-pytest tests/integration
+## Testing
 
-# Evaluation Tests
+### Unit Tests
 
-pytest eval
-\`\`\`
+```bash
+# Run all tests
+pytest
 
-## 📝 Nächste Schritte
+# Run with coverage
+pytest --cov=immoassist_agent
 
-### Sofort verfügbar:
+# Run specific test categories
+pytest -m unit
+pytest -m integration
+```
 
-- [x] Grundlegende Chat-Funktionalität
-- [x] Immobiliensuche und -berechnungen
-- [x] FAQ und Wissensdatenbank
-- [x] Benutzerprofil-Management
+### Integration Tests
 
-### In Entwicklung:
+```bash
+# Test with real Google Cloud services
+pytest -m integration --env=staging
+```
 
-- [ ] Echte Datenbank-Integration
-- [ ] HeyGen Avatar-Integration
-- [ ] ElevenLabs Sprachsynthese
-- [ ] 3D-Immobilien-Visualisierung
-- [ ] Automatisches FAQ-Update vom Website
+### Load Testing
 
-### Geplant:
+```bash
+# Performance testing with concurrent users
+pytest tests/performance/ -v
+```
 
-- [ ] Multi-Agent Workflow (Finanzierung, Rechtliches)
-- [ ] Vektordatenbank für semantische Suche
-- [ ] Real-time Property Data Feed
-- [ ] Mobile App Integration
-- [ ] CRM-System Integration
+## API Reference
 
-## 🤝 Beitragen
+### Multi-Agent System
 
-1. Fork das Repository
-2. Feature Branch erstellen (\`git checkout -b feature/AmazingFeature\`)
-3. Commit Changes (\`git commit -m 'Add some AmazingFeature'\`)
-4. Branch pushen (\`git push origin feature/AmazingFeature\`)
-5. Pull Request öffnen
+- **Root Agent**: `Philipp_ImmoAssist_Coordinator`
+- **Knowledge Agent**: `knowledge_specialist`
+- **Property Agent**: `property_specialist`
+- **Calculator Agent**: `calculator_specialist`
+- **Analytics Agent**: `analytics_specialist`
 
-## 📄 Lizenz
+### Core Functions
 
-Dieses Projekt ist unter der Apache 2.0 Lizenz lizenziert - siehe [LICENSE](LICENSE) für Details.
+```python
+from immoassist_agent import root_agent, create_immoassist_multi_agent_system
 
-## 📞 Support
+# Access the main agent
+agent = root_agent
 
-Bei Fragen oder Problemen:
+# Create new instance
+new_agent = create_immoassist_multi_agent_system()
+```
 
-- 📧 Email: support@immoassist.de
-- 💬 Issues: [GitHub Issues](https://github.com/your-org/immoassist-agent/issues)
-- 📚 Dokumentation: [Wiki](https://github.com/your-org/immoassist-agent/wiki)
+## Contributing
+
+We welcome contributions from the international development community!
+
+### Getting Started
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass (`pytest`)
+6. Format code (`black . && ruff check --fix .`)
+7. Commit changes (`git commit -m 'Add amazing feature'`)
+8. Push to branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+### Development Guidelines
+
+- Follow existing code style and patterns
+- Add comprehensive tests for new features
+- Update documentation for API changes
+- Use conventional commit messages
+- Ensure backward compatibility
+
+### Code Review Process
+
+1. All changes require peer review
+2. Automated tests must pass
+3. Code coverage should not decrease
+4. Documentation must be updated
+5. Security considerations reviewed
+
+## Roadmap
+
+### Current Version (1.0.0)
+
+- Multi-agent architecture
+- Basic consultation functionality
+- Knowledge base integration
+- Financial calculations
+
+### Upcoming Features
+
+- Real database integration
+- Enhanced RAG capabilities
+- A2A inter-agent communication
+- Mobile application support
+- Advanced analytics dashboard
+
+### Long-term Vision
+
+- Multi-modal support (voice, images)
+- Automated ML model training
+- Enterprise CRM integration
+- International market expansion
+
+## Security
+
+### Security Features
+
+- Google Cloud IAM authentication
+- Encrypted data transmission (HTTPS/TLS)
+- Secure session management
+- Input validation and sanitization
+- Rate limiting and abuse protection
+
+### Reporting Security Issues
+
+For security concerns, please email: security@immoassist.de
+
+Do not open public GitHub issues for security vulnerabilities.
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+## Support
+
+### Documentation
+
+- [API Documentation](https://docs.immoassist.de)
+- [Deployment Guide](MULTI_AGENT_DEPLOYMENT_GUIDE.md)
+- [ADK Documentation](https://google.github.io/adk-docs/)
+
+### Community
+
+- [GitHub Discussions](https://github.com/immoassist/immoassist-agent/discussions)
+- [Issue Tracker](https://github.com/immoassist/immoassist-agent/issues)
+
+### Professional Support
+
+For enterprise support and consulting:
+
+- Email: enterprise@immoassist.de
+- Website: https://www.immoassist.de
 
 ---
 
-**ImmoAssist** - Ihr intelligenter Partner für Immobilieninvestments 🏠✨
+**ImmoAssist** - Your intelligent partner for real estate investments in Germany
+
+Built with Google ADK | Powered by Vertex AI | Made for International Teams

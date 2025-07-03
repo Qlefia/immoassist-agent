@@ -1,59 +1,61 @@
-# 🏗️ ImmoAssist Multi-Agent System - Deployment Guide
+# ImmoAssist Multi-Agent System - Deployment Guide
 
-Комплексное руководство по развертыванию и использованию профессиональной multi-agent архитектуры ImmoAssist на базе Google ADK и Vertex AI.
+Comprehensive deployment and operations guide for the production-ready ImmoAssist multi-agent architecture based on Google ADK and Vertex AI.
 
-## 📋 Содержание
+## Table of Contents
 
-1. [Архитектурный обзор](#архитектурный-обзор)
-2. [Предварительные требования](#предварительные-требования)
-3. [Настройка среды](#настройка-среды)
-4. [Развертывание агентов](#развертывание-агентов)
-5. [Тестирование системы](#тестирование-системы)
-6. [A2A интеграция](#a2a-интеграция)
-7. [Производственное развертывание](#производственное-развертывание)
-8. [Мониторинг и аналитика](#мониторинг-и-аналитика)
-
----
-
-## 🏛️ Архитектурный обзор
-
-### Multi-Agent система ImmoAssist
-
-```
-🧠 Root Agent (Philipp)
-├── 📚 Knowledge Agent (FAQ + Handbücher)
-├── 🏠 Property Agent (Поиск недвижимости)
-├── 💰 Calculator Agent (Финансовые расчеты)
-└── 📊 Analytics Agent (Рыночная аналитика)
-```
-
-### Ключевые компоненты
-
-- **Root Agent**: Координатор и главный консультант Philipp
-- **Sub-Agents**: Специализированные агенты через AgentTool
-- **Session Management**: VertexAiSessionService для состояния
-- **RAG Integration**: Vertex AI RAG для знаний
-- **A2A Support**: Межагентная коммуникация
+1. [Architecture Overview](#architecture-overview)
+2. [Prerequisites](#prerequisites)
+3. [Environment Setup](#environment-setup)
+4. [Agent Deployment](#agent-deployment)
+5. [System Testing](#system-testing)
+6. [A2A Integration](#a2a-integration)
+7. [Production Deployment](#production-deployment)
+8. [Monitoring and Analytics](#monitoring-and-analytics)
+9. [Troubleshooting](#troubleshooting)
+10. [Maintenance](#maintenance)
 
 ---
 
-## ⚙️ Предварительные требования
+## Architecture Overview
+
+### ImmoAssist Multi-Agent System
+
+```
+Root Agent (Philipp)
+├── Knowledge Agent (FAQ + Handbooks)
+├── Property Agent (Real Estate Search)
+├── Calculator Agent (Financial Calculations)
+└── Analytics Agent (Market Analytics)
+```
+
+### Key Components
+
+- **Root Agent**: Coordinator and main consultant Philipp
+- **Sub-Agents**: Specialized agents via AgentTool pattern
+- **Session Management**: VertexAiSessionService for state management
+- **RAG Integration**: Vertex AI RAG for knowledge retrieval
+- **A2A Support**: Inter-agent communication protocol
+
+---
+
+## Prerequisites
 
 ### Google Cloud Setup
 
 ```bash
-# 1. Установка Google Cloud CLI
+# 1. Install Google Cloud CLI
 curl https://sdk.cloud.google.com | bash
 source ~/.bashrc
 
-# 2. Аутентификация
+# 2. Authentication
 gcloud auth login
 gcloud auth application-default login
 
-# 3. Настройка проекта
+# 3. Project configuration
 gcloud config set project YOUR_PROJECT_ID
 
-# 4. Включение API
+# 4. Enable required APIs
 gcloud services enable aiplatform.googleapis.com
 gcloud services enable cloudstorage.googleapis.com
 gcloud services enable firestore.googleapis.com
@@ -62,157 +64,213 @@ gcloud services enable firestore.googleapis.com
 ### Python Environment
 
 ```bash
-# Python 3.11+ требуется
+# Python 3.11+ required
 python --version  # >= 3.11
 
-# Виртуальная среда
+# Virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# или
+# or
 venv\Scripts\activate     # Windows
 
-# Зависимости
-pip install google-adk
-pip install google-cloud-aiplatform
-pip install google-cloud-storage
-pip install python-dotenv
+# Install dependencies
+pip install google-adk>=1.5.0
+pip install google-cloud-aiplatform[adk]>=1.93.0
+pip install python-dotenv>=1.0.1
 ```
 
 ---
 
-## 🔧 Настройка среды
+## Environment Setup
 
-### 1. Конфигурация Environment Variables
+### 1. Environment Variables Configuration
 
 ```bash
-# Скопируйте шаблон
+# Copy template
 cp environment.config.template .env
 
-# Отредактируйте .env файл
+# Edit configuration
 nano .env
 ```
 
-**Обязательные настройки:**
+**Required Settings:**
 
 ```bash
 # Google Cloud
 GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_CLOUD_LOCATION=europe-west1
 GOOGLE_GENAI_USE_VERTEXAI=True
 
-# Модели
+# Models
 MODEL_NAME=gemini-2.5-pro
 EMBEDDING_MODEL=text-embedding-005
 
-# ADK
-ADK_PORT=8001
+# ADK Configuration
+ADK_PORT=8000
 ADK_HOST=localhost
 ```
 
-### 2. Настройка Vertex AI RAG (Опционально)
+### 2. Vertex AI RAG Setup (Optional)
 
 ```bash
-# Создание RAG корпуса
+# Create RAG corpus
 gcloud alpha vertex-ai rag-corpora create \
-  --location=us-central1 \
+  --location=europe-west1 \
   --display-name="ImmoAssist Knowledge Base" \
   --description="FAQ and handbooks for ImmoAssist"
 
-# Получение корпуса ID
-gcloud alpha vertex-ai rag-corpora list --location=us-central1
+# Get corpus ID
+gcloud alpha vertex-ai rag-corpora list --location=europe-west1
 
-# Добавление в .env
-RAG_CORPUS=projects/YOUR_PROJECT/locations/us-central1/ragCorpora/CORPUS_ID
+# Add to .env
+RAG_CORPUS=projects/YOUR_PROJECT/locations/europe-west1/ragCorpora/CORPUS_ID
 ```
 
-### 3. Подготовка знаний
+### 3. Knowledge Base Preparation
 
 ```bash
-# Структура знаний уже готова
-ls -la "for embedings/FAQ/"
-ls -la "for embedings/Handbücher/"
+# Knowledge structure is ready
+ls -la data/FAQ/
+ls -la data/Handbücher/
 
-# Векторная база данных
-ls -la vector_store_backup/metadata.json
+# Vector database backup available
+ls -la vector_store/metadata.json
 ```
 
 ---
 
-## 🚀 Развертывание агентов
+## Agent Deployment
 
-### 1. Запуск Multi-Agent системы
+### 1. Multi-Agent System Startup
 
 ```bash
-# Переход в директорию проекта
+# Navigate to project directory
 cd immoassist
 
-# Проверка конфигурации
-python -c "from immoassist_agent.multi_agent_architecture import root_agent; print('✅ Multi-Agent система загружена')"
+# Verify configuration
+python -c "from immoassist_agent.multi_agent_architecture import root_agent; print('Multi-Agent system loaded successfully')"
 
-# Запуск ADK Web UI
-adk web
+# Start ADK Web UI
+adk web --port 8000
 ```
 
-### 2. Проверка агентов
+### 2. Agent Verification
 
-Откройте браузер: `http://localhost:8001/dev-ui/?app=immoassist_agent`
+Open browser: `http://localhost:8000/dev-ui/?app=immoassist_agent`
 
-**Ожидаемый вывод в консоли:**
+**Expected Console Output:**
 
 ```
 INFO - ImmoAssist Multi-Agent System initialized successfully
-INFO - ✓ Root Agent: Philipp (Coordinator)
-INFO - ✓ Knowledge Agent: FAQ & Handbooks
-INFO - ✓ Property Agent: Search & Analysis
-INFO - ✓ Calculator Agent: Financial Calculations
-INFO - ✓ Analytics Agent: Market Analysis
+INFO - Root Agent: Philipp_ImmoAssist_Coordinator (Main Coordinator)
+INFO - Knowledge Agent: knowledge_specialist (FAQ & Handbooks)
+INFO - Property Agent: property_specialist (Search & Analysis)
+INFO - Calculator Agent: calculator_specialist (Financial Calculations)
+INFO - Analytics Agent: analytics_specialist (Market Analysis)
 ```
 
-### 3. Тестовые запросы
+### 3. Test Queries
 
 ```bash
-# Тест знаний
-"Was ist das Erbbaurecht?"
+# Knowledge test
+"What is Erbbaurecht?"
 
-# Тест расчетов
-"Berechne die Rendite für eine 350.000€ Wohnung in München"
+# Calculation test
+"Calculate the yield for a 350,000 EUR apartment in Munich"
 
-# Тест поиска
-"Finde Neubau-Immobilien in Berlin unter 400.000€"
+# Property search test
+"Find new construction properties in Berlin under 400,000 EUR"
 
-# Тест аналитики
-"Wie entwickeln sich die Immobilienpreise in Hamburg?"
+# Analytics test
+"How are real estate prices developing in Hamburg?"
 ```
 
 ---
 
-## 🔗 A2A интеграция
+## System Testing
 
-### 1. Генерация Agent Card
+### 1. Agent Functionality Tests
+
+**Knowledge Agent:**
+
+- FAQ query handling
+- Handbook information retrieval
+- Multi-language responses
+
+**Property Agent:**
+
+- Property search execution
+- Market analysis integration
+- Location assessment
+
+**Calculator Agent:**
+
+- ROI calculations
+- Cash flow projections
+- Tax optimization scenarios
+
+**Analytics Agent:**
+
+- Market trend analysis
+- Risk assessment
+- Investment recommendations
+
+### 2. Integration Tests
 
 ```bash
-# Создание A2A Agent Card
+# Multi-agent coordination
+"Compare properties in Leipzig and Dresden with full financial analysis"
+
+# Cross-domain queries
+"Find a property in Munich, calculate ROI, and analyze market trends"
+
+# Multi-language testing
+"ты работаешь?" → Russian response
+"Was ist Tilgung?" → German response with knowledge specialist
+```
+
+### 3. Performance Testing
+
+```bash
+# Load testing
+ab -n 100 -c 10 http://localhost:8000/
+
+# Memory usage monitoring
+ps aux | grep python
+
+# Response time analysis
+curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8000/
+```
+
+---
+
+## A2A Integration
+
+### 1. Agent Card Generation
+
+```bash
+# Generate A2A Agent Card
 python immoassist_agent/a2a_agent_card.py
 
-# Проверка файла
+# Verify agent card
 cat .well-known/agent.json
 ```
 
 ### 2. Agent Discovery Endpoint
 
-Agent Card будет доступен по адресу:
+Agent Card available at:
 
 ```
-http://localhost:8001/.well-known/agent.json
+http://localhost:8000/.well-known/agent.json
 ```
 
-### 3. A2A Communication (Будущее)
+### 3. A2A Communication (Future)
 
 ```python
-# Пример использования
+# Example usage
 from immoassist_agent.a2a_agent_card import ImmoAssistAgentCard
 
-# Создание карты агента
+# Create agent card
 card = ImmoAssistAgentCard.create_card()
 print(card.to_json())
 
@@ -222,38 +280,39 @@ discovery = ImmoAssistAgentCard.create_agent_discovery_endpoint()
 
 ---
 
-## 🏭 Производственное развертывание
+## Production Deployment
 
-### 1. Cloud Run Deployment
+### 1. Google Cloud Run Deployment
 
 ```bash
-# Создание Dockerfile
+# Create Dockerfile
 cat > Dockerfile << EOF
 FROM python:3.11-slim
+
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
+
 EXPOSE 8080
 CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8080"]
 EOF
 
-# Создание requirements.txt
-pip freeze > requirements.txt
-
-# Развертывание
+# Deploy to Cloud Run
 gcloud run deploy immoassist-multi-agent \
   --source . \
   --port=8080 \
   --allow-unauthenticated \
-  --region=us-central1 \
-  --memory=1Gi \
-  --cpu=1 \
+  --region=europe-west1 \
+  --memory=2Gi \
+  --cpu=2 \
   --min-instances=1 \
-  --max-instances=10
+  --max-instances=10 \
+  --timeout=3600
 ```
 
-### 2. Environment для Production
+### 2. Production Environment Configuration
 
 ```bash
 # Production .env
@@ -263,13 +322,13 @@ MODEL_NAME=gemini-2.5-pro
 ADK_PORT=8080
 ADK_HOST=0.0.0.0
 DEVELOPMENT_MODE=false
-LOG_LEVEL=WARNING
+LOG_LEVEL=INFO
 ```
 
-### 3. Security настройки
+### 3. Security Configuration
 
 ```bash
-# IAM роли
+# IAM roles
 gcloud projects add-iam-policy-binding YOUR_PROJECT \
   --member="serviceAccount:immoassist-sa@YOUR_PROJECT.iam.gserviceaccount.com" \
   --role="roles/aiplatform.user"
@@ -277,119 +336,273 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT \
 gcloud projects add-iam-policy-binding YOUR_PROJECT \
   --member="serviceAccount:immoassist-sa@YOUR_PROJECT.iam.gserviceaccount.com" \
   --role="roles/storage.objectViewer"
+
+# VPC configuration for enhanced security
+gcloud compute networks create immoassist-vpc --subnet-mode=custom
+```
+
+### 4. Load Balancing and CDN
+
+```bash
+# Create load balancer
+gcloud compute url-maps create immoassist-lb \
+  --default-service=immoassist-backend-service
+
+# Configure SSL
+gcloud compute ssl-certificates create immoassist-ssl \
+  --domains=api.immoassist.de
 ```
 
 ---
 
-## 📊 Мониторинг и аналитика
+## Monitoring and Analytics
 
-### 1. Логирование
+### 1. Logging Configuration
 
 ```python
-# Проверка логов
+# Production logging setup
 import logging
-logging.basicConfig(level=logging.INFO)
-
-# В Cloud Run
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=immoassist-multi-agent"
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/var/log/immoassist/agent.log')
+    ]
+)
 ```
 
-### 2. Session Tracking
+### 2. Session Metrics
 
-Система автоматически отслеживает:
+The system automatically tracks:
 
-- Время сессии
-- Количество вопросов
-- Использованные агенты
-- Темы обсуждения
+- Session duration and user engagement
+- Question volume and agent utilization
+- Topic distribution and conversation flow
+- Performance metrics and error rates
 
-### 3. Metrics для Production
+### 3. Cloud Monitoring Integration
+
+```bash
+# View logs in Cloud Logging
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=immoassist-multi-agent"
+
+# Set up alerting
+gcloud alpha monitoring policies create \
+  --policy-from-file=monitoring-policy.yaml
+```
+
+### 4. Performance Metrics
 
 ```python
-# Метрики в session state
+# Session state metrics
 {
   "analytics": {
-    "session_duration": 0,
-    "questions_asked": 0,
-    "agents_consulted": [],
-    "topics_discussed": []
+    "session_duration_seconds": 1200,
+    "total_questions_asked": 15,
+    "agents_consulted": ["knowledge_specialist", "calculator_specialist"],
+    "topics_discussed": ["property_search", "financial_analysis"],
+    "user_satisfaction_indicators": ["positive_feedback", "continued_engagement"]
   }
 }
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
-### Распространенные проблемы
+### Common Issues
 
-1. **RAG не работает**
+#### 1. RAG Not Working
 
-   ```bash
-   # Проверка корпуса
-   gcloud alpha vertex-ai rag-corpora describe CORPUS_ID --location=us-central1
+```bash
+# Check corpus configuration
+gcloud alpha vertex-ai rag-corpora describe CORPUS_ID --location=europe-west1
 
-   # Fallback на локальный поиск автоматически включится
-   ```
+# Verify fallback search
+python -c "from immoassist_agent.true_rag_agent import search_knowledge_base; print('Fallback OK')"
+```
 
-2. **Агенты не отвечают**
+#### 2. Agent Initialization Failures
 
-   ```bash
-   # Проверка импортов
-   python -c "from immoassist_agent import root_agent; print('OK')"
+```bash
+# Check imports
+python -c "from immoassist_agent import root_agent; print('Import OK')"
 
-   # Проверка environment
-   python -c "import os; print(os.getenv('GOOGLE_CLOUD_PROJECT'))"
-   ```
+# Verify environment
+python -c "import os; print('Project:', os.getenv('GOOGLE_CLOUD_PROJECT'))"
 
-3. **Session проблемы**
+# Check authentication
+gcloud auth application-default print-access-token
+```
 
-   ```bash
-   # Очистка session
-   rm -rf ~/.adk/sessions/
+#### 3. Session Management Issues
 
-   # Рестарт ADK
-   adk web --reset
-   ```
+```bash
+# Clear session cache
+rm -rf ~/.adk/sessions/
 
----
+# Restart ADK with clean state
+adk web --port 8000 --reset
+```
 
-## 🎯 Следующие шаги
+#### 4. Memory and Performance Issues
 
-### Краткосрочные (1-2 недели)
+```bash
+# Monitor resource usage
+top -p $(pgrep -f "adk web")
 
-- [ ] Тестирование всех агентов
-- [ ] Настройка production среды
-- [ ] Интеграция с реальной базой объектов
+# Check memory leaks
+python -m memory_profiler agent_script.py
 
-### Среднесрочные (1-2 месяца)
-
-- [ ] A2A коммуникация с внешними агентами
-- [ ] Расширенная аналитика
-- [ ] Мобильное приложение
-
-### Долгосрочные (3-6 месяцев)
-
-- [ ] Multi-modal поддержка (голос, изображения)
-- [ ] Автоматическое ML-обучение на пользовательских данных
-- [ ] Enterprise интеграции (CRM, ERP)
+# Optimize garbage collection
+export PYTHONOPTIMIZE=1
+```
 
 ---
 
-## 🆘 Поддержка
+## Maintenance
 
-### Контакты для помощи
+### Regular Maintenance Tasks
 
-- **GitHub Issues**: Создавайте issue в репозитории
-- **Google Cloud Support**: Для вопросов по Vertex AI
-- **ADK Documentation**: https://google.github.io/adk-docs/
+#### 1. Dependency Updates
 
-### Полезные ссылки
+```bash
+# Update ADK and dependencies
+pip install --upgrade google-adk google-cloud-aiplatform
 
-- [ADK Quickstart](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-development-kit/quickstart)
-- [A2A Protocol](https://github.com/a2aproject/a2a-samples)
-- [Vertex AI RAG](https://cloud.google.com/vertex-ai/generative-ai/docs/retrieval-augmented-generation/overview)
+# Check for security updates
+pip audit
+
+# Update lockfile
+poetry update
+```
+
+#### 2. Model Performance Monitoring
+
+```bash
+# Monitor model performance
+gcloud ai models list --region=europe-west1
+
+# Check token usage
+gcloud billing budgets list
+
+# Performance benchmarks
+python scripts/benchmark_agents.py
+```
+
+#### 3. Knowledge Base Updates
+
+```bash
+# Update FAQ content
+git pull origin main
+
+# Refresh vector embeddings
+python scripts/update_embeddings.py
+
+# Validate knowledge consistency
+pytest tests/knowledge_validation.py
+```
+
+#### 4. Security Audits
+
+```bash
+# Audit dependencies
+safety check
+
+# Security scan
+bandit -r immoassist_agent/
+
+# Access review
+gcloud projects get-iam-policy YOUR_PROJECT
+```
+
+### Backup and Recovery
+
+#### 1. Configuration Backup
+
+```bash
+# Backup configuration
+cp .env .env.backup.$(date +%Y%m%d)
+tar -czf config-backup-$(date +%Y%m%d).tar.gz .env pyproject.toml
+```
+
+#### 2. Session Data Backup
+
+```bash
+# Export session data
+python scripts/export_sessions.py --output=sessions-backup.json
+
+# Backup vector store
+tar -czf vector-store-backup-$(date +%Y%m%d).tar.gz vector_store/
+```
+
+#### 3. Disaster Recovery
+
+```bash
+# Restore from backup
+tar -xzf config-backup-20250103.tar.gz
+cp .env.backup.20250103 .env
+
+# Rebuild system
+python scripts/rebuild_system.py --config=.env
+```
 
 ---
 
-**✅ Готово к продакшену!** Ваша multi-agent система ImmoAssist готова для профессионального использования с полной поддержкой Vertex AI, A2A протокола, и enterprise-grade архитектуры.
+## Production Checklist
+
+### Pre-Deployment
+
+- [ ] All environment variables configured
+- [ ] Google Cloud authentication working
+- [ ] All agents initialize successfully
+- [ ] Knowledge base accessible
+- [ ] Session management functional
+- [ ] Security settings configured
+
+### Post-Deployment
+
+- [ ] Health checks passing
+- [ ] Monitoring and alerting active
+- [ ] Load balancing configured
+- [ ] SSL certificates valid
+- [ ] Backup procedures tested
+- [ ] Documentation updated
+
+### Ongoing Operations
+
+- [ ] Regular dependency updates
+- [ ] Performance monitoring
+- [ ] Security audit schedule
+- [ ] Knowledge base maintenance
+- [ ] User feedback integration
+- [ ] Capacity planning review
+
+---
+
+## Support and Resources
+
+### Documentation Links
+
+- [Google ADK Documentation](https://google.github.io/adk-docs/)
+- [Vertex AI Documentation](https://cloud.google.com/vertex-ai/docs)
+- [A2A Protocol Specification](https://github.com/a2aproject/a2a-samples)
+
+### Support Channels
+
+- **GitHub Issues**: Technical issues and feature requests
+- **Google Cloud Support**: Infrastructure and platform issues
+- **Community Forum**: General questions and discussions
+
+### Emergency Contacts
+
+- **Production Issues**: ops@immoassist.de
+- **Security Incidents**: security@immoassist.de
+- **Business Critical**: emergency@immoassist.de
+
+---
+
+**Production Ready!** Your ImmoAssist multi-agent system is ready for enterprise deployment with full Vertex AI integration, A2A protocol support, and enterprise-grade architecture.
+
+Built for Scale | Secured by Design | Ready for International Teams

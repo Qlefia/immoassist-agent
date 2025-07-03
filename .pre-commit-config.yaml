@@ -1,0 +1,134 @@
+# Pre-commit configuration for ImmoAssist Agent
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Code formatting with Black
+  - repo: https://github.com/psf/black
+    rev: "25.1.0"
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: [--line-length=88]
+
+  # Import sorting with isort
+  - repo: https://github.com/pycqa/isort
+    rev: "5.13.2"
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+
+  # Linting and code quality with Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.1.15"
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.8.0"
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+        args: [--ignore-missing-imports]
+
+  # Security checks with bandit
+  - repo: https://github.com/pycqa/bandit
+    rev: "1.7.5"
+    hooks:
+      - id: bandit
+        args: [-r, ., -f, json, -o, bandit-report.json]
+        exclude: ^tests/
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.5.0"
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: mixed-line-ending
+
+  # Python specific checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.5.0"
+    hooks:
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: name-tests-test
+        args: [--pytest-test-first]
+
+  # Dependency security scanning
+  - repo: https://github.com/pyupio/safety
+    rev: "2.3.5"
+    hooks:
+      - id: safety
+        args: [--json, --output, safety-report.json]
+
+  # Documentation checks
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: "6.3.0"
+    hooks:
+      - id: pydocstyle
+        args: [--convention=google]
+        exclude: ^tests/
+
+  # Environment file validation
+  - repo: local
+    hooks:
+      - id: check-env-template
+        name: Check environment template
+        entry: python
+        language: system
+        args:
+          [
+            -c,
+            "import os; assert os.path.exists('environment.config.template'), 'Missing environment template'",
+          ]
+        files: ^environment\.config\.template$
+
+      # Custom hook to validate ADK agent structure
+      - id: validate-agent-structure
+        name: Validate ADK agent structure
+        entry: python
+        language: system
+        args:
+          [
+            -c,
+            "from immoassist_agent import root_agent; print('Agent structure valid')",
+          ]
+        files: ^immoassist_agent/.*\.py$
+        pass_filenames: false
+
+# Configuration for specific tools
+default_language_version:
+  python: python3.11
+
+# Files to exclude from all hooks
+exclude: |
+  (?x)^(
+    venv/.*|
+    \.venv/.*|
+    vector_store/.*|
+    \.git/.*|
+    \.mypy_cache/.*|
+    __pycache__/.*|
+    .*\.log|
+    .*\.pyc
+  )$
+
+# Fail fast - stop on first failure
+fail_fast: false
+
+# Default stages to run
+default_stages: [commit, push]

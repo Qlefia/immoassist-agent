@@ -1,40 +1,40 @@
-# Core ADK dependencies
-google-adk>=1.0.0
-google-cloud-aiplatform[adk]>=1.93.0
+# ImmoAssist Agent - Production Dependencies
+# Python 3.11+ required for optimal performance and type safety
 
-# Google Cloud services
-google-cloud-storage>=2.10.0
-google-auth>=2.20.0
+# Core Google ADK and AI Platform dependencies
+google-adk>=1.5.0,<2.0.0
+google-cloud-aiplatform[adk]>=1.93.0,<2.0.0
+vertexai>=1.93.0,<2.0.0
+google-genai>=1.9.0,<2.0.0
 
-# Vertex AI RAG Engine
-vertexai>=1.93.0
+# Google Cloud services and authentication
+google-auth>=2.20.0,<3.0.0
+google-cloud-storage>=2.14.0,<3.0.0
 
-# Configuration and environment
-python-dotenv>=1.0.0
-pydantic>=2.0.0
+# Core application dependencies
+pydantic>=2.10.0,<3.0.0
+python-dotenv>=1.0.1,<2.0.0
+requests>=2.31.0,<3.0.0
+httpx>=0.26.0,<1.0.0
 
-# Data processing
-requests>=2.31.0
+# Optional: Enhanced RAG and vector search capabilities
+# Uncomment if using Vertex AI RAG or vector databases
+# google-cloud-firestore>=2.16.0,<3.0.0
+# langchain>=0.1.0,<0.2.0
+# langchain-google-vertexai>=1.0.0,<2.0.0
+# langchain-community>=0.0.20,<0.1.0
 
-# Optional: Enhanced vector search capabilities
-# google-cloud-discoveryengine>=0.11.0  # For Vertex AI Search integration
-# weaviate-client>=4.0.0                # For Weaviate vector database
-# pinecone-client>=3.0.0                # For Pinecone vector database
+# Optional: Database integration for user data persistence
+# Uncomment if using PostgreSQL for user data
+# sqlalchemy>=2.0.0,<3.0.0
+# psycopg2-binary>=2.9.9,<3.0.0
 
-# Development and testing
-pytest>=7.0.0
-pytest-asyncio>=0.21.0
+# Optional: Document processing capabilities
+# Uncomment if processing PDF documents or handling file uploads
+# pypdf2>=3.0.1,<4.0.0
+# python-multipart>=0.0.6,<1.0.0
+# markdown>=3.5.2,<4.0.0
 
-google-genai>=1.9.0
-google-cloud-firestore>=2.16.0
-langchain>=0.1.0
-langchain-google-vertexai>=1.0.0
-langchain-community>=0.0.20
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.9
-httpx>=0.26.0
-pypdf2>=3.0.1
-python-multipart>=0.0.6
-markdown>=3.5.2
-black>=25.1.0
-jupyter>=1.0.0 
+# Development dependencies should be installed separately using:
+# pip install -r requirements-dev.txt
+# Or using poetry: poetry install --with dev 
