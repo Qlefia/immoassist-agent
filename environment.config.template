@@ -1,0 +1,89 @@
+# =============================================================================
+# ImmoAssist Multi-Agent System Environment Configuration Template
+# =============================================================================
+
+# ==============================
+# GOOGLE CLOUD AUTHENTICATION  
+# ==============================
+
+# Option 1: Vertex AI (Recommended for production)
+# Requires: gcloud auth application-default login
+# The system will automatically detect your project using google.auth.default()
+GOOGLE_GENAI_USE_VERTEXAI=True
+
+# Optional: Override project and location (auto-detected if not set)
+# GOOGLE_CLOUD_PROJECT=your-project-id
+# GOOGLE_CLOUD_LOCATION=europe-west1
+
+# Option 2: AI Studio API Key (Development/Testing)
+# Uncomment the following lines to use AI Studio instead of Vertex AI:
+# GOOGLE_GENAI_USE_VERTEXAI=False
+# GOOGLE_API_KEY=your-ai-studio-api-key
+
+# ==============================
+# MODEL CONFIGURATION
+# ==============================
+
+# Gemini model to use (default: gemini-2.5-pro)
+MODEL_NAME=gemini-2.5-pro
+
+# ==============================
+# RAG (RETRIEVAL AUGMENTED GENERATION) 
+# ==============================
+
+# Optional: Vertex AI RAG corpus for knowledge base
+# RAG_CORPUS=projects/your-project/locations/your-location/ragCorpora/your-corpus
+
+# ==============================
+# ADK SERVER CONFIGURATION
+# ==============================
+
+# Server port (default: 8000)
+PORT=8000
+
+# Debug mode (default: True for development)
+DEBUG=True
+
+# ==============================
+# MULTI-AGENT SYSTEM FEATURES
+# ==============================
+
+# Enable/disable individual agents
+ENABLE_KNOWLEDGE_AGENT=true
+ENABLE_PROPERTY_AGENT=true
+ENABLE_CALCULATOR_AGENT=true
+ENABLE_ANALYTICS_AGENT=true
+
+# Session management
+SESSION_TIMEOUT_MINUTES=60
+ENABLE_SESSION_PERSISTENCE=true
+
+# ==============================
+# LOGGING AND MONITORING
+# ==============================
+
+LOG_LEVEL=INFO
+ENABLE_ANALYTICS_TRACKING=true
+
+# ==============================
+# SETUP INSTRUCTIONS
+# ==============================
+
+# 1. For Vertex AI (Recommended):
+#    - Install Google Cloud SDK: https://cloud.google.com/sdk/docs/install
+#    - Run: gcloud auth application-default login
+#    - Enable Vertex AI API in your project
+#    - System will auto-detect project ID and use appropriate region
+
+# 2. For AI Studio (Development only):
+#    - Get API key from https://aistudio.google.com/app/apikey
+#    - Set GOOGLE_GENAI_USE_VERTEXAI=False
+#    - Set GOOGLE_API_KEY=your-key
+
+# 3. Optional RAG Setup:
+#    - Create a RAG corpus in Vertex AI
+#    - Upload your knowledge base documents
+#    - Set RAG_CORPUS to the corpus resource name
+
+# 4. Copy this file to .env and update values as needed
+# 5. Run: python -m google.adk.cli run --port=8000 immoassist_agent 

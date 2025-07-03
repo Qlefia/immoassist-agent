@@ -1,0 +1,55 @@
+[project]
+name = "immoassist-agent"
+version = "0.1.0"
+description = "AI агент для консультаций по недвижимости ImmoAssist"
+authors = [{ name = "ImmoAssist Team", email = "support@immoassist.de" }]
+license = "Apache License 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+google-cloud-aiplatform = { version = "^1.93.0", extras = [
+    "adk",
+    "agent-engines",
+] }
+python = "^3.11"
+google-genai = "^1.9.0"
+google-adk = "^1.0.0"
+pydantic = "^2.10.6"
+python-dotenv = "^1.0.1"
+# Для векторной базы и RAG
+google-cloud-firestore = "^2.16.0"
+google-cloud-storage = "^2.14.0"
+langchain = "^0.1.0"
+langchain-google-vertexai = "^1.0.0"
+langchain-community = "^0.0.20"
+# Для интеграции с базой данных
+sqlalchemy = "^2.0.0"
+psycopg2-binary = "^2.9.9"
+# Для работы с API
+requests = "^2.31.0"
+httpx = "^0.26.0"
+# Для работы с документами и текстом
+pypdf2 = "^3.0.1"
+python-multipart = "^0.0.6"
+markdown = "^3.5.2"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.26.0"
+black = "^25.1.0"
+google-adk = { version = "^1.0.0", extras = ["eval"] }
+jupyter = "^1.0.0"
+
+[tool.poetry.group.deployment]
+optional = true
+
+[tool.poetry.group.deployment.dependencies]
+absl-py = "^2.2.1"
+gunicorn = "^21.2.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api" 

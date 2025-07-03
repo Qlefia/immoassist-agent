@@ -1,0 +1,12 @@
+Das ImmoDev Rechner-Tool bietet eine umfassende Analyse aller relevanten Parameter einer Investition:
+
+Bewertung der Immobilie basierend auf der Mietrendite
+Berechnung der Finanzierungsbelastung und deren Entwicklung mit und ohne KfW-Förderung, abhängig von der Finanzierungsdauer
+Berechnung von Steueranreizen (lineare, degressive, Sonderabschreibung) pro Jahr
+Berechnung der Kaufnebenkosten
+Berechnung und dynamische Entwicklung der Instandhaltungs- und Verwaltungskosten pro Jahr
+Berechnung und dynamische Entwicklung des monatlichen Cashflow-Einflusses
+Dynamische Wertentwicklung der Immobilie pro Jahr
+Dynamische Entwicklung der Mieteinnahmen (einschließlich potenziellen Mietausfalls) pro Jahr
+Berechnung des Gesamtgewinns beim Verkauf der Wohnung pro Jahr
+Berechnung und Entwicklung der Gesamtinvestition pro Jahr. Alle Parameter können individuell eingestellt und geändert werden. Hier ist der Link zum Rechner-Tool.
