@@ -6,16 +6,18 @@
 # GOOGLE CLOUD AUTHENTICATION  
 # ==============================
 
-# Option 1: Vertex AI (Recommended for production)
-# Requires: gcloud auth application-default login
-# The system will automatically detect your project using google.auth.default()
+# Recommended: Use Application Default Credentials (ADC)
+# The system automatically detects your project using google.auth.default()
+# Run: gcloud auth application-default login
 GOOGLE_GENAI_USE_VERTEXAI=True
 
-# Optional: Override project and location (auto-detected if not set)
+# ⚠️  AVOID setting these unless absolutely necessary:
+# Setting GOOGLE_CLOUD_PROJECT can conflict with Vertex AI auto-detection
+# Only uncomment if ADC detection fails:
 # GOOGLE_CLOUD_PROJECT=your-project-id
 # GOOGLE_CLOUD_LOCATION=europe-west1
 
-# Option 2: AI Studio API Key (Development/Testing)
+# Alternative: AI Studio API Key (Development/Testing only)
 # Uncomment the following lines to use AI Studio instead of Vertex AI:
 # GOOGLE_GENAI_USE_VERTEXAI=False
 # GOOGLE_API_KEY=your-ai-studio-api-key
@@ -66,14 +68,26 @@ LOG_LEVEL=INFO
 ENABLE_ANALYTICS_TRACKING=true
 
 # ==============================
+# SECURITY BEST PRACTICES
+# ==============================
+
+# For production deployment:
+# 1. Use VPC Service Controls for network isolation
+# 2. Configure IAM roles with least privilege principle
+# 3. Enable audit logging for compliance
+# 4. Use private Google access for secure connectivity
+
+# ==============================
 # SETUP INSTRUCTIONS
 # ==============================
 
-# 1. For Vertex AI (Recommended):
+# 1. For Vertex AI (Recommended for production):
 #    - Install Google Cloud SDK: https://cloud.google.com/sdk/docs/install
 #    - Run: gcloud auth application-default login
-#    - Enable Vertex AI API in your project
-#    - System will auto-detect project ID and use appropriate region
+#    - Enable required APIs:
+#      * gcloud services enable aiplatform.googleapis.com
+#      * gcloud services enable storage.googleapis.com
+#    - System auto-detects project ID and uses appropriate region
 
 # 2. For AI Studio (Development only):
 #    - Get API key from https://aistudio.google.com/app/apikey
@@ -85,5 +99,11 @@ ENABLE_ANALYTICS_TRACKING=true
 #    - Upload your knowledge base documents
 #    - Set RAG_CORPUS to the corpus resource name
 
-# 4. Copy this file to .env and update values as needed
-# 5. Run: python -m google.adk.cli run --port=8000 immoassist_agent 
+# 4. Production Security:
+#    - Configure VPC Service Controls
+#    - Set up private service connectivity
+#    - Enable Cloud Audit Logs
+#    - Configure appropriate IAM roles
+
+# 5. Copy this file to .env and update values as needed
+# 6. Run: adk web --port=8000 

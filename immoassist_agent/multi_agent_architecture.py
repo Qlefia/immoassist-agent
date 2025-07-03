@@ -35,17 +35,15 @@ load_dotenv()
 # Google Cloud authentication setup following ADK 2025 patterns
 try:
     _, project_id = google.auth.default()
-    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
-    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west1")
-    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
-    logging.info(f"Google Cloud project detected: {project_id}")
+    # Let Vertex AI auto-detect project instead of forcing environment variables
+    logging.info(f"Google Cloud project detected via ADC: {project_id}")
 except Exception as e:
-    logging.warning(f"Could not detect Google Cloud project: {e}")
-    # Fallback to environment variables
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "your-project-id")
-    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
-    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west1")
-    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+    logging.warning(f"Could not detect Google Cloud project via ADC: {e}")
+    # Only fallback to environment if absolutely necessary
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+    if not project_id:
+        logging.error("No Google Cloud project found. Please configure ADC or set GOOGLE_CLOUD_PROJECT")
+        raise RuntimeError("Google Cloud project configuration required")
 
 # Configure structured logging for production
 logging.basicConfig(
