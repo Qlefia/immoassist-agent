@@ -15,10 +15,13 @@ TODO: Add test instructions here
 
 ## Setup
 
-`ash
+bash
+
 # Install test dependencies
+
 pip install pytest pytest-asyncio
 
 # Run tests
+
 pytest tests/
 `
