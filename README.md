@@ -177,7 +177,7 @@ pytest
 
 (Note: Test cases need to be implemented.)
 
-## 🌱 Future Architectural Enhancements
+## Future Architectural Enhancements
 
 This project has a solid foundation. For future scaling and to incorporate more advanced patterns seen in flagship examples like `gemini-fullstack`, the following enhancements can be considered:
 
