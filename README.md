@@ -7,16 +7,9 @@
 
 An enterprise-grade, multi-agent AI system for 24/7 real estate investment consulting in Germany. Built with Google's Agent Development Kit (ADK), this project provides expert advice on German new-build properties.
 
-## 🏛️ Architecture Overview
+## Architecture Overview
 
-The system is designed as a **Multi-Agent System**, where a central coordinating agent delegates tasks to a team of specialized agents. This architecture ensures separation of concerns, scalability, and maintainability.
-
-- **`Philipp` (Root Agent):** The primary coordinator and the sole point of contact for the user. He manages the conversation, understands the user's intent, and delegates tasks to the appropriate specialist. He synthesizes the information from specialists and presents it as his own expert analysis.
-- **Specialist Agents:** A team of agents, each with a specific domain of expertise:
-  - `knowledge_specialist`: Handles legal terms, processes, and FAQs.
-  - `property_specialist`: Searches for and evaluates properties.
-  - `calculator_specialist`: Performs all financial calculations and explains financial terms (e.g., _Sonder-AfA_).
-  - `market_analyst`: Provides market trends and strategic investment advice.
+Extended architecture of ImmoAssist with agents, tools, and integrations:
 
 ```mermaid
 graph TD
@@ -26,14 +19,14 @@ graph TD
 
     subgraph "ImmoAssist AI System"
         direction LR
-        Root["Philipp (Root Agent)<br/>Coordinator"]
+        Root["Philipp (Root Agent)\nCoordinator\n- State from site DB\n- Dialog history\n- HeyGen, Voice Recognition"]
 
         subgraph "Specialist Team (Tools)"
             direction TB
-            Knowledge[knowledge_specialist]
-            Property[property_specialist]
-            Calculator[calculator_specialist]
-            Market[market_analyst]
+            Knowledge["knowledge_specialist\n- Vector DB (Google Cloud)\n- Vector search over materials"]
+            Property["property_specialist\n- New-builds DB\n- Property parameters"]
+            Calculator["calculator_specialist\n- Web calculator\n- Client calculation DB"]
+            Market["market_analyst\n- Access to market data"]
         end
     end
 
@@ -42,15 +35,52 @@ graph TD
     Root -- Delegates to --> Property
     Root -- Delegates to --> Calculator
     Root -- Delegates to --> Market
+    Knowledge -- Uses --> VecDB["Vector knowledge base (Google Cloud)"]
+    Property -- Uses --> PropDB["New-builds DB"]
+    Calculator -- Uses --> CalcSrv["Web calculator"]
+    Calculator -- Stores --> CalcDB["Client calculation DB"]
+    Root -- Holds --> StateDB["State from site DB (onboarding, language, etc.)"]
+    Root -- Stores --> Dialogs["Dialog history"]
+    Root -- Integrates --> HeyGen["HeyGen"]
+    Root -- Integrates --> VoiceRec["Voice Recognition"]
 ```
 
-### Technology Stack
+### Key Component Implementation
 
-- **Framework**: Google Agent Development Kit (ADK) v1.5+
-- **AI Models**: Gemini 2.5 Flash, Gemini 2.5 Pro
-- **Platform**: Google Cloud Platform (europe-west1)
+- **Vector knowledge base**: All materials (FAQ, handbooks, guides) are indexed and stored in a vector DB on Google Cloud. Retrieval is performed via vector search for relevant answers.
+- **Calculator**: The same calculator as on the website is used. All calculations per client are stored in a dedicated DB for analytics and personalization.
+- **New-builds DB**: All properties and their parameters are stored in a centralized DB, accessible to the property_specialist.
+- **Root agent state**: All user data (language, onboarding results, etc.) is stored in the site DB and available to the root agent for personalized dialog.
+- **Dialog history**: All user interactions are stored for personalization and analytics.
+- **HeyGen & Voice Recognition**: Integration with HeyGen for avatar video generation and with a speech recognition service for voice input/output.
+
+## Technology Stack
+
+- **Programming Language**: Python 3.11+
+- **Framework**: Google Agent Development Kit (ADK)
 - **Web Server**: Uvicorn / FastAPI (via ADK)
-- **Knowledge Base**: Internal `data` directory with FAQs and handbooks.
+- **Frontend**: (Planned) React/TypeScript (see gemini-fullstack inspiration)
+- **Vector Database**: Google Cloud Vertex AI Matching Engine (for semantic search)
+- **Relational Database**: (Planned) PostgreSQL or Google Cloud SQL (for user state, calculations, property data)
+- **Authentication**: Google Cloud IAM, OAuth2 (planned)
+- **Voice & Avatar Integration**: HeyGen API, Speech-to-Text API (Google or other)
+- **Testing**: Pytest
+- **Code Quality**: Black, Ruff
+- **Dependency Management**: requirements.txt (current), **Poetry** (recommended for future)
+- **CI/CD**: GitHub Actions (planned)
+- **Cloud Infrastructure**: Google Cloud Platform (GCP), Docker (future)
+- **Monitoring/Logging**: Google Cloud Logging, Sentry (future)
+- **ML Training Pipeline**: (Planned) Vertex AI Pipelines or custom MLflow pipeline for fine-tuning and retraining models
+
+### Recommendations for Future Development
+
+- **Switch to Poetry** for dependency and environment management for better reproducibility and packaging.
+- **Implement a full ML training pipeline** for custom model fine-tuning and retraining (Vertex AI Pipelines or MLflow).
+- **Frontend**: Develop a modern React/TypeScript frontend for a seamless user experience.
+- **Scalable cloud infrastructure**: Use Docker and Kubernetes for scalable deployments.
+- **Advanced analytics**: Integrate with BigQuery or similar for deep analytics on user interactions and investment trends.
+- **Automated testing & CI/CD**: Set up GitHub Actions for automated testing, linting, and deployment.
+- **Data privacy & compliance**: Ensure GDPR compliance for all user data and dialog history storage.
 
 ## 🚀 Getting Started
 
