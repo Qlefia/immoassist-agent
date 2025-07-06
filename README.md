@@ -82,7 +82,7 @@ graph TD
 - **Automated testing & CI/CD**: Set up GitHub Actions for automated testing, linting, and deployment.
 - **Data privacy & compliance**: Ensure GDPR compliance for all user data and dialog history storage.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -137,7 +137,7 @@ This will start the web server. You can interact with your agent by navigating t
 
 The web interface is provided by the Google Agent Development Kit.
 
-## 🏗️ Project Structure
+## Project Structure
 
 The project follows a clean, modular structure for easy maintenance and scalability.
 
