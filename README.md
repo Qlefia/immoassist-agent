@@ -81,7 +81,6 @@ graph TD
 
 ### Vertex AI Search Integration
 
-<<<<<<< HEAD
 The system now includes comprehensive integration with Google Cloud Vertex AI Search (Discovery Engine) for advanced knowledge retrieval:
 
 - **Semantic Search**: Intelligent document search across all knowledge materials using natural language queries
@@ -109,8 +108,6 @@ The knowledge specialist implements a sophisticated RAG pipeline:
 - **Version Control**: Support for document versioning and updates
 - **Access Control**: Secure access to sensitive information through Google Cloud IAM
 
-=======
->>>>>>> 732be3a641f76dcfd2bfdbe6c83465913c6b0bc8
 ## Getting Started
 
 ### Prerequisites
@@ -257,6 +254,7 @@ pytest
 (Note: Test cases need to be implemented.)
 
 <<<<<<< HEAD
+
 ### Development Workflow
 
 1. **Code Quality**: Run formatting and linting before commits
@@ -293,8 +291,6 @@ pytest
 - **Network Security**: VPC Service Controls for network isolation
 - **Monitoring**: Real-time monitoring and alerting for security events
 
-=======
->>>>>>> 732be3a641f76dcfd2bfdbe6c83465913c6b0bc8
 ## Future Architectural Enhancements
 
 This project has a solid foundation. For future scaling and to incorporate more advanced patterns seen in flagship examples like `gemini-fullstack`, the following enhancements can be considered:
