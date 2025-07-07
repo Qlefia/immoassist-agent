@@ -16,7 +16,8 @@ SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 SEARCH_URL = f"https://{REGION}-discoveryengine.googleapis.com/v1alpha/projects/{PROJECT_ID}/locations/{REGION}/collections/default_collection/engines/{ENGINE_ID}/servingConfigs/default_search:search"
 ANSWER_URL = f"https://{REGION}-discoveryengine.googleapis.com/v1alpha/projects/{PROJECT_ID}/locations/{REGION}/collections/default_collection/engines/{ENGINE_ID}/servingConfigs/default_search:answer"
 
-# Удалён вызов load_dotenv() и debug-print — теперь переменные окружения подхватываются только в run_agent.py
+# Note: The load_dotenv() call has been removed. Environment variables are now expected 
+# to be loaded by the parent script or execution environment.
 
 def get_access_token() -> str:
     credentials = service_account.Credentials.from_service_account_file(
@@ -43,7 +44,7 @@ def search_vertex_ai_search(query: str, page_size: int = 3, use_answer: bool = F
         "Content-Type": "application/json"
     }
     if use_answer:
-        # Генерация ответа (answer endpoint)
+        # (answer endpoint)
         payload = {
             "query": {
                 "text": query,
