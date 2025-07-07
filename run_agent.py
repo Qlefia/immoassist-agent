@@ -7,6 +7,8 @@ import os
 import sys
 import uvicorn
 from google.adk.cli.fast_api import get_fast_api_app
+from dotenv import load_dotenv
+load_dotenv()
 
 # Setup environment
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
@@ -19,10 +21,10 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     agents_dir = script_dir  # Use the project root as the agents directory
     
-    print(f"🤖 Starting ImmoAssist Agent...")
-    print(f"📁 Agents directory: {agents_dir}")
+    print(f"Starting ImmoAssist Agent...")
+    print(f"Agents directory: {agents_dir}")
     print(f"   (Looking for agent packages like 'app' here)")
-    print(f"🌐 Web interface will be available at: http://localhost:8000")
+    print(f" Web interface will be available at: http://localhost:8000")
     
     try:
         # Create FastAPI app with ADK

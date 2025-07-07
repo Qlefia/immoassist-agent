@@ -155,86 +155,13 @@ def get_property_details(property_id: str) -> PropertyDetails:
 
 
 @FunctionTool 
-def calculate_investment_return(
-    purchase_price: int,
-    down_payment: int,
-    monthly_rental_income: int,
-    monthly_costs: int = 200,
-    loan_interest_rate: float = 3.5,
-    user_tax_rate: float = 0.42
-) -> InvestmentCalculationResult:
-    """Calculate investment return for German real estate."""
-    
-    # Validation
-    if purchase_price <= 0:
-        raise ValueError("Purchase price must be positive")
-    if down_payment <= 0 or down_payment >= purchase_price:
-        raise ValueError("Down payment must be positive and less than purchase price")
-    if monthly_rental_income <= 0:
-        raise ValueError("Monthly rental income must be positive")
-    
-    # Basic calculations
-    loan_amount = purchase_price - down_payment
-    monthly_interest_rate = loan_interest_rate / 100 / 12
-    
-    # Monthly payment calculation (simplified annuity formula)
-    if monthly_interest_rate > 0:
-        monthly_payment = loan_amount * monthly_interest_rate * (1 + monthly_interest_rate)**360 / ((1 + monthly_interest_rate)**360 - 1)
-    else:
-        monthly_payment = loan_amount / 360  # No interest case
-    
-    # Cash flow
-    monthly_net = monthly_rental_income - monthly_payment - monthly_costs
-    
-    # German tax benefits (5% special depreciation for new construction)
-    annual_depreciation = purchase_price * config.special_depreciation_rate
-    annual_tax_savings = annual_depreciation * user_tax_rate
-    monthly_tax_savings = annual_tax_savings / 12
-    
-    monthly_net_with_tax = monthly_net + monthly_tax_savings
-    
-    # ROI calculation
-    annual_net_with_tax = monthly_net_with_tax * 12
-    roi_percentage = (annual_net_with_tax / down_payment) * 100 if down_payment > 0 else 0
-    
-    # Payback period
-    payback_period = down_payment / (monthly_net_with_tax * 12) if monthly_net_with_tax > 0 else None
-    
-    # Risk assessment
-    if roi_percentage > 6:
-        risk_level = "low"
-        key_benefits = ["Hohe Rendite", "Steuervorteile durch 5% AfA", "Neue Energieeffizienz A+"]
-        risks = ["Marktrisiko", "Leerstandsrisiko"]
-    elif roi_percentage > 3:
-        risk_level = "medium"
-        key_benefits = ["Solide Rendite", "Steuervorteile", "Inflationsschutz"]
-        risks = ["Marktvolatilität", "Zinssteigerungsrisiko", "Instandhaltungskosten"]
-    else:
-        risk_level = "high"
-        key_benefits = ["Steuervorteile", "Sachwert"]
-        risks = ["Niedrige Rendite", "Hohe Finanzierungskosten", "Marktrisiko"]
-    
-    return InvestmentCalculationResult(
-        summary=CalculationSummary(
-            purchase_price=purchase_price,
-            down_payment=down_payment,
-            loan_amount=loan_amount,
-            monthly_payment=round(monthly_payment, 2),
-            monthly_net_income=round(monthly_net, 2),
-            monthly_net_with_tax=round(monthly_net_with_tax, 2)
-        ),
-        tax_benefits=GermanTaxBenefits(
-            annual_depreciation=annual_depreciation,
-            annual_tax_savings=round(annual_tax_savings, 2),
-            monthly_tax_savings=round(monthly_tax_savings, 2),
-            special_depreciation_rate=config.special_depreciation_rate
-        ),
-        recommendation=InvestmentRecommendation(
-            recommended=monthly_net_with_tax > 0,
-            roi_percentage=round(roi_percentage, 2),
-            payback_period_years=round(payback_period, 1) if payback_period else None,
-            risk_level=risk_level,
-            key_benefits=key_benefits,
-            risks=risks
-        )
-    ) 
+def calculate_investment_return(term: str) -> str:
+    """Поясняет финансовые термины и принципы расчёта доходности, не производя никаких вычислений."""
+    explanations = {
+        "митрендите": "Митрендите (Mietrendite) — это показатель доходности недвижимости, рассчитываемый как отношение годового дохода от аренды к стоимости объекта. Он помогает инвестору понять, насколько эффективно вложены средства.",
+        "tilgung": "Тильгунг (Tilgung) — это процесс погашения основного долга по ипотечному кредиту. Обычно ежемесячный платёж по кредиту состоит из процентов и части суммы основного долга (Tilgung). Чем выше доля Tilgung, тем быстрее уменьшается задолженность.",
+        "sonder-afa": "Sonder-AfA — это специальная ускоренная амортизация для новых объектов недвижимости в Германии. Она позволяет списывать 5% стоимости объекта ежегодно в течение первых лет, что существенно снижает налоговую нагрузку инвестора.",
+        # Можно добавить другие термины по аналогии
+    }
+    key = term.strip().lower()
+    return explanations.get(key, f"Пояснение по термину '{term}' отсутствует. Уточните, пожалуйста, что именно вас интересует из финансовых понятий.") 

@@ -14,9 +14,7 @@ from .property_tools import (
 
 # Knowledge tools  
 from .knowledge_tools import (
-    search_faq,
-    search_handbook,
-    get_process_guide
+    search_knowledge_rag
 )
 
 # Integration tools
@@ -34,9 +32,7 @@ __all__ = [
     "calculate_investment_return",
     
     # Knowledge tools
-    "search_faq",
-    "search_handbook",
-    "get_process_guide",
+    "search_knowledge_rag",
     
     # Integration tools
     "send_heygen_avatar_message",
