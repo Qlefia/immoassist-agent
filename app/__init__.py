@@ -1,30 +1,31 @@
-# Copyright 2025 ImmoAssist
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
-ImmoAssist Multi-Agent System - Enterprise Edition
+ImmoAssist - AI-powered German real estate investment assistant.
 
-Production-ready agent system for German real estate investment consulting,
-built with Google ADK following enterprise architecture best practices.
+This package provides intelligent consultation services for German real estate
+investments using advanced AI agents and multi-modal capabilities.
 """
 
-# Import root agent for ADK Web interface
-from . import agent
+from __future__ import annotations
 
-# Version info
-__version__ = "3.0.0"
-__description__ = "Enterprise multi-agent system for German real estate investments"
+# Apply Windows Path compatibility patch for Google ADK
+import pathlib
+from pathlib import WindowsPath
 
-# Export for ADK Web interface
-__all__ = ["root_agent"] 
+# Patch WindowsPath to support rstrip method
+if not hasattr(WindowsPath, 'rstrip'):
+    def rstrip(self, chars=None):
+        """Add rstrip method to WindowsPath for compatibility with Google ADK."""
+        return str(self).rstrip(chars)
+    
+    WindowsPath.rstrip = rstrip
+
+__version__ = "0.1.0"
+__author__ = "ImmoAssist Team"
+__email__ = "team@immoassist.com"
+
+# Public API exports
+__all__ = [
+    "__author__",
+    "__email__",
+    "__version__",
+]

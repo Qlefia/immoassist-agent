@@ -6,37 +6,32 @@ and following clean architecture principles.
 """
 
 # Property tools
-from .property_tools import (
-    search_properties,
-    get_property_details,
-    calculate_investment_return
-)
-
-# Knowledge tools  
-from .knowledge_tools import (
-    search_knowledge_rag
-)
-
 # Integration tools
 from .integration_tools import (
-    send_heygen_avatar_message,
-    generate_elevenlabs_audio,
     create_appointment_link,
-    send_email_notification
+    generate_elevenlabs_audio,
+    send_email_notification,
+    send_heygen_avatar_message,
+)
+
+# Knowledge tools
+from .knowledge_tools import search_knowledge_rag
+from .property_tools import (
+    calculate_investment_return,
+    get_property_details,
+    search_properties,
 )
 
 __all__ = [
-    # Property tools
-    "search_properties",
-    "get_property_details", 
     "calculate_investment_return",
-    
+    "create_appointment_link",
+    "generate_elevenlabs_audio",
+    "get_property_details",
     # Knowledge tools
     "search_knowledge_rag",
-    
+    # Property tools
+    "search_properties",
+    "send_email_notification",
     # Integration tools
     "send_heygen_avatar_message",
-    "generate_elevenlabs_audio",
-    "create_appointment_link",
-    "send_email_notification"
-] 
+]

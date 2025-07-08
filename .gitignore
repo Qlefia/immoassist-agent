@@ -62,3 +62,10 @@ tmp/
 credentials.json
 service-account*.json
 gothic-agility-464209-f4-39095fb8e054.json
+
+.mypy_cache/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
