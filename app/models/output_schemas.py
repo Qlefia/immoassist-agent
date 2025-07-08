@@ -7,7 +7,6 @@ for type-safe, validated outputs.
 
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 
 # === PROPERTY SEARCH OUTPUTS ===
@@ -113,7 +112,6 @@ class InvestmentCalculationResult(BaseModel):
     summary: CalculationSummary = Field(description="Calculation summary")
     tax_benefits: GermanTaxBenefits = Field(description="German tax benefits")
     recommendation: InvestmentRecommendation = Field(description="Investment recommendation")
-    calculated_at: datetime = Field(default_factory=datetime.now, description="Calculation timestamp")
 
 
 # === KNOWLEDGE BASE OUTPUTS ===
@@ -193,5 +191,4 @@ class AgentError(BaseModel):
     error_code: str = Field(description="Error code for identification")
     message: str = Field(description="Human-readable error message")
     details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Error timestamp")
     recoverable: bool = Field(description="Whether the error is recoverable") 
