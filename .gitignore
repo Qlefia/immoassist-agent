@@ -61,3 +61,4 @@ tmp/
 # Google Cloud credentials (if stored locally)
 credentials.json
 service-account*.json
+gothic-agility-464209-f4-39095fb8e054.json

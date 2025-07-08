@@ -24,7 +24,7 @@ def main():
     print(f"Starting ImmoAssist Agent...")
     print(f"Agents directory: {agents_dir}")
     print(f"   (Looking for agent packages like 'app' here)")
-    print(f" Web interface will be available at: http://localhost:8000")
+    print(f" Web interface will be available at: http://localhost:8001")
     
     try:
         # Create FastAPI app with ADK
@@ -38,7 +38,7 @@ def main():
         uvicorn.run(
             app, 
             host="0.0.0.0", 
-            port=8000,
+            port=8001,
             log_level="info"
         )
         

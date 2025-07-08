@@ -4,6 +4,7 @@ import json
 from typing import Optional
 from google.adk.tools import FunctionTool
 from ..config import config
+from ..models.output_schemas import HeyGenResponse, ElevenLabsResponse
 
 
 @FunctionTool
@@ -11,35 +12,29 @@ def send_heygen_avatar_message(
     message: str,
     avatar_id: Optional[str] = "default_philipp",
     language: str = "de"
-) -> str:
+) -> HeyGenResponse:
     """Send message via HeyGen AI avatar."""
     
     if not config.get_feature_flag("enable_ai_avatar"):
-        return json.dumps({
-            "status": "disabled",
-            "message": "AI Avatar feature is disabled"
-        })
+        return HeyGenResponse(
+            success=False,
+            error_message="AI Avatar feature is disabled"
+        )
     
     if not config.heygen_api_key:
-        return json.dumps({
-            "status": "error", 
-            "message": "HeyGen API key not configured"
-        })
+        return HeyGenResponse(
+            success=False,
+            error_message="HeyGen API key not configured"
+        )
     
     # TODO: Implement actual HeyGen API integration
     # For now, return mock response
     
-    result = {
-        "status": "success",
-        "message": "Avatar message sent successfully",
-        "avatar_id": avatar_id,
-        "language": language,
-        "video_url": f"https://app.heygen.com/share/{avatar_id}/preview",
-        "duration_seconds": len(message) * 0.1,  # Rough estimation
-        "message_preview": message[:100] + "..." if len(message) > 100 else message
-    }
-    
-    return json.dumps(result, ensure_ascii=False)
+    return HeyGenResponse(
+        success=True,
+        avatar_url=f"https://app.heygen.com/share/{avatar_id}/preview",
+        message_id=f"msg_{avatar_id}_{len(message)}"
+    )
 
 
 @FunctionTool
@@ -47,35 +42,30 @@ def generate_elevenlabs_audio(
     text: str,
     voice_id: Optional[str] = "philipp_voice",
     language: str = "de"
-) -> str:
+) -> ElevenLabsResponse:
     """Generate audio using ElevenLabs text-to-speech."""
     
     if not config.get_feature_flag("enable_voice_synthesis"):
-        return json.dumps({
-            "status": "disabled",
-            "message": "Voice synthesis feature is disabled"
-        })
+        return ElevenLabsResponse(
+            success=False,
+            error_message="Voice synthesis feature is disabled"
+        )
     
     if not config.elevenlabs_api_key:
-        return json.dumps({
-            "status": "error",
-            "message": "ElevenLabs API key not configured"
-        })
+        return ElevenLabsResponse(
+            success=False,
+            error_message="ElevenLabs API key not configured"
+        )
     
     # TODO: Implement actual ElevenLabs API integration
     # For now, return mock response
     
-    result = {
-        "status": "success", 
-        "message": "Audio generated successfully",
-        "voice_id": voice_id,
-        "language": language,
-        "audio_url": f"https://api.elevenlabs.io/v1/audio/{voice_id}/preview.mp3",
-        "duration_seconds": len(text) * 0.08,  # Rough estimation
-        "text_preview": text[:100] + "..." if len(text) > 100 else text
-    }
-    
-    return json.dumps(result, ensure_ascii=False)
+    return ElevenLabsResponse(
+        success=True,
+        audio_url=f"https://api.elevenlabs.io/v1/audio/{voice_id}/preview.mp3",
+        duration_seconds=len(text) * 0.08,  # Rough estimation
+        voice_id=voice_id
+    )
 
 
 @FunctionTool

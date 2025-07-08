@@ -127,6 +127,22 @@ class KnowledgeSearchResult(BaseModel):
     confidence_score: Optional[float] = Field(default=None, description="Search confidence score")
 
 
+class RagSource(BaseModel):
+    """A source document for a RAG response."""
+
+    title: str = Field(description="The title of the source document.")
+    link: str = Field(description="A link to the source document.")
+
+
+class RagResponse(BaseModel):
+    """The response from a RAG search."""
+
+    answer: str = Field(description="The answer to the user's query.")
+    sources: List[RagSource] = Field(
+        description="A list of sources used to generate the answer."
+    )
+
+
 class ProcessGuideStep(BaseModel):
     """Single step in a process guide."""
     

@@ -1,55 +1,115 @@
-"""Knowledge tools for ImmoAssist enterprise system."""
+"""
+Knowledge tools for ImmoAssist enterprise system.
+Provides RAG (Retrieval-Augmented Generation) capabilities using Vertex AI Search.
+"""
 
 import json
-import os
-from typing import List, Optional
+from typing import List
 from google.adk.tools import FunctionTool
+from app.models.output_schemas import RagResponse, RagSource
 from .vertex_search import search_vertex_ai_search
-from google.generativeai import GenerativeModel
-
-
-def generate_expert_answer(user_question: str, search_results: List[dict]) -> str:
-    """
-    Generates an expert answer based on search results using Gemini.
-    
-    Args:
-        user_question (str): The user's original question
-        search_results (List[dict]): List of search results with title, content, and link
-        
-    Returns:
-        str: Expert answer generated from the search results
-    """
-    # Build the prompt with sources
-    sources = []
-    for i, doc in enumerate(search_results, 1):
-        sources.append(f"{i}. {doc['title']}: {doc['content'] or '[see source]'} (link: {doc['link']})")
-    sources_text = "\n".join(sources)
-    prompt = f"""
-User Question: {user_question}
-Found Sources:
-{sources_text}
----
-You are a professional real estate consultant. Use the found documents to answer the user's question. Write completely in the language in which the question was asked, even if the sources are in another language. Do not insert original phrases in another language, but paraphrase their meaning in the user's language. Style - expert, structured, clear. Be sure to reference sources (title, link).
-"""
-    # Auto-language detection - Gemini will handle this automatically if the prompt is in the target language
-    model = GenerativeModel("gemini-2.5-flash")
-    response = model.generate_content(prompt)
-    return response.text.strip() if hasattr(response, 'text') else str(response)
 
 
 @FunctionTool
-def search_knowledge_rag(query: str, top_k: int = 3) -> str:
+def search_knowledge_rag(query: str, top_k: int = 3) -> RagResponse:
     """
-    Search all knowledge documents (FAQ, handbooks, guides, etc.) in Vertex AI Search (Discovery Engine),
-    then generate an expert answer in the user's language.
+    Search knowledge documents in Vertex AI Search and return structured response with sources.
+    """
+    print(f"[RAG] Processing query: {query}")
+    answer_text = None
+    sources = []
+    # Try Answer endpoint first for generative responses
+    try:
+        print("[RAG] Trying Answer endpoint...")
+        answer_results = search_vertex_ai_search(query, page_size=top_k, use_answer=True)
+        if answer_results and len(answer_results) > 0:
+            answer_data = answer_results[0]
+            if "answer" in answer_data:
+                answer_obj = answer_data["answer"]
+                answer_text = answer_obj.get("answerText", "")
+                citations = answer_obj.get("citations", [])
+                references = answer_obj.get("references", [])
+                # Process references first (prefer those with links)
+                for ref in references:
+                    title = ref.get("title", "Document")
+                    uri = ref.get("uri", "")
+                    if uri and title:
+                        sources.append(RagSource(title=title, link=uri))
+                # Fallback to citations if no references
+                if not sources:
+                    for citation in citations:
+                        citation_sources = citation.get("sources", [])
+                        for source in citation_sources:
+                            title = source.get("title", "Document")
+                            uri = source.get("uri", "")
+                            if uri and title:
+                                sources.append(RagSource(title=title, link=uri))
+                # Try alternative URI fields if still no sources
+                if not sources:
+                    for citation in citations:
+                        citation_sources = citation.get("sources", [])
+                        for source in citation_sources:
+                            uri = (
+                                source.get("uri", "") or 
+                                source.get("link", "") or 
+                                source.get("url", "") or
+                                source.get("document", {}).get("uri", "")
+                            )
+                            title = (
+                                source.get("title", "") or 
+                                source.get("displayName", "") or
+                                "Document"
+                            )
+                            if uri and title:
+                                sources.append(RagSource(title=title, link=uri))
+                # If still no sources with links, but there are titles, add them with empty link
+                if not sources:
+                    # Try references first
+                    for ref in references:
+                        title = ref.get("title", "Document")
+                        if title:
+                            sources.append(RagSource(title=title, link=""))
+                    # Then try citations
+                    if not sources:
+                        for citation in citations:
+                            citation_sources = citation.get("sources", [])
+                            for source in citation_sources:
+                                title = (
+                                    source.get("title", "") or 
+                                    source.get("displayName", "") or
+                                    "Document"
+                                )
+                                if title:
+                                    sources.append(RagSource(title=title, link=""))
+    except Exception as e:
+        print(f"[RAG] Answer endpoint failed: {e}")
+    # Fallback to Search endpoint
+    if not answer_text or len(answer_text) < 10:
+        print("[RAG] Falling back to Search endpoint...")
+        try:
+            results = search_vertex_ai_search(query, page_size=top_k, use_answer=False)
+            for doc in results:
+                # Add with link if available, otherwise with just title
+                if doc.get("title"):
+                    sources.append(RagSource(title=doc["title"], link=doc.get("link", "")))
+            # Collect content for response
+            content_parts = []
+            for doc in results:
+                if doc.get("content"):
+                    content_parts.append(f"Document: {doc['title']}\n{doc['content']}")
+            if content_parts:
+                answer_text = content_parts[0].split('\n', 1)[1] if len(content_parts[0].split('\n', 1)) > 1 else content_parts[0]
+            else:
+                if sources:
+                    answer_text = "Relevant documents found in knowledge base, but content is temporarily unavailable. Please contact our specialists for personalized consultation."
+                else:
+                    answer_text = "No relevant information found in knowledge base for your query. Please contact our specialists for personalized consultation."
+        except Exception as e:
+            print(f"[RAG] Search endpoint failed: {e}")
+            answer_text = "Technical error occurred during search. Please contact our specialists."
     
-    Args:
-        query (str): The user's question or search query.
-        top_k (int): Number of top results to return.
-        
-    Returns:
-        str: JSON string with 'answer' field (expert answer) and 'sources' field (list of sources).
-    """
-    results = search_vertex_ai_search(query, page_size=top_k)
-    answer = generate_expert_answer(query, results)
-    return json.dumps({"answer": answer, "sources": results}, ensure_ascii=False) 
+    # Return structured RagResponse object
+    return RagResponse(
+        answer=answer_text.strip() if answer_text else "No answer found.",
+        sources=sources
+    ) 

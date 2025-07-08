@@ -45,11 +45,13 @@ class ImmoAssistConfiguration:
     
     # === GOOGLE CLOUD ===
     project_id: Optional[str] = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT"))
-    location: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west1"))
+    # Хардкодим регион для Vertex AI Search
+    location: str = field(default_factory=lambda: 'eu')
     
     # === RAG & KNOWLEDGE BASE ===
     rag_corpus: Optional[str] = field(default_factory=lambda: os.getenv("RAG_CORPUS"))
     knowledge_base_path: str = field(default_factory=lambda: os.getenv("KNOWLEDGE_BASE_PATH", "./data"))
+    vertex_ai_engine_id: str = field(default_factory=lambda: os.getenv("VERTEX_AI_ENGINE_ID", "doc-ai-search_1751880000612"))
     
     # === REAL ESTATE DOMAIN ===
     property_price_range: Dict[str, int] = field(default_factory=lambda: {

@@ -1,8 +1,7 @@
 """Property tools for ImmoAssist enterprise system."""
 
-from typing import Optional
+from typing import List, Optional
 from google.adk.tools import FunctionTool
-from ..config import config
 from ..models.output_schemas import (
     PropertySearchResult,
     PropertySearchItem,
@@ -13,7 +12,7 @@ from ..models.output_schemas import (
     InvestmentCalculationResult,
     CalculationSummary,
     GermanTaxBenefits,
-    InvestmentRecommendation
+    InvestmentRecommendation,
 )
 
 
@@ -155,13 +154,75 @@ def get_property_details(property_id: str) -> PropertyDetails:
 
 
 @FunctionTool 
-def calculate_investment_return(term: str) -> str:
-    """Поясняет финансовые термины и принципы расчёта доходности, не производя никаких вычислений."""
-    explanations = {
-        "митрендите": "Митрендите (Mietrendite) — это показатель доходности недвижимости, рассчитываемый как отношение годового дохода от аренды к стоимости объекта. Он помогает инвестору понять, насколько эффективно вложены средства.",
-        "tilgung": "Тильгунг (Tilgung) — это процесс погашения основного долга по ипотечному кредиту. Обычно ежемесячный платёж по кредиту состоит из процентов и части суммы основного долга (Tilgung). Чем выше доля Tilgung, тем быстрее уменьшается задолженность.",
-        "sonder-afa": "Sonder-AfA — это специальная ускоренная амортизация для новых объектов недвижимости в Германии. Она позволяет списывать 5% стоимости объекта ежегодно в течение первых лет, что существенно снижает налоговую нагрузку инвестора.",
-        # Можно добавить другие термины по аналогии
-    }
-    key = term.strip().lower()
-    return explanations.get(key, f"Пояснение по термину '{term}' отсутствует. Уточните, пожалуйста, что именно вас интересует из финансовых понятий.") 
+def calculate_investment_return(
+    purchase_price: int,
+    down_payment: int,
+    monthly_rental_income: int,
+    interest_rate: float = 4.5,
+    loan_term_years: int = 30
+) -> InvestmentCalculationResult:
+    """Calculate investment return and provide detailed financial analysis."""
+    
+    # Calculate loan amount
+    loan_amount = purchase_price - down_payment
+    
+    # Calculate monthly payment (simplified)
+    monthly_rate = interest_rate / 100 / 12
+    total_payments = loan_term_years * 12
+    monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate)**total_payments) / ((1 + monthly_rate)**total_payments - 1)
+    
+    # Calculate annual depreciation (5% for new construction)
+    annual_depreciation = purchase_price * 0.05
+    annual_tax_savings = annual_depreciation * 0.42  # Assuming 42% tax rate
+    monthly_tax_savings = annual_tax_savings / 12
+    
+    # Calculate net income
+    monthly_net_income = monthly_rental_income - monthly_payment
+    monthly_net_with_tax = monthly_net_income + monthly_tax_savings
+    
+    # Calculate ROI
+    annual_rental_income = monthly_rental_income * 12
+    roi_percentage = (annual_rental_income / purchase_price) * 100
+    
+    # Determine recommendation
+    recommended = roi_percentage >= 4.0 and monthly_net_with_tax > 0
+    risk_level = "low" if roi_percentage >= 5.0 else "medium" if roi_percentage >= 4.0 else "high"
+    
+    # Calculate payback period
+    payback_period = None
+    if monthly_net_with_tax > 0:
+        payback_period = down_payment / (monthly_net_with_tax * 12)
+    
+    return InvestmentCalculationResult(
+        summary=CalculationSummary(
+            purchase_price=purchase_price,
+            down_payment=down_payment,
+            loan_amount=loan_amount,
+            monthly_payment=monthly_payment,
+            monthly_net_income=monthly_net_income,
+            monthly_net_with_tax=monthly_net_with_tax
+        ),
+        tax_benefits=GermanTaxBenefits(
+            annual_depreciation=annual_depreciation,
+            annual_tax_savings=annual_tax_savings,
+            monthly_tax_savings=monthly_tax_savings,
+            special_depreciation_rate=5.0
+        ),
+        recommendation=InvestmentRecommendation(
+            recommended=recommended,
+            roi_percentage=roi_percentage,
+            payback_period_years=payback_period,
+            risk_level=risk_level,
+            key_benefits=[
+                "5% Sonder-AfA для новых объектов",
+                "Высокая энергоэффективность (A+)",
+                "Гарантированная аренда",
+                "Низкие эксплуатационные расходы"
+            ],
+            risks=[
+                "Рыночные колебания цен",
+                "Изменения в налоговом законодательстве",
+                "Возможные задержки в строительстве"
+            ]
+        )
+    ) 
