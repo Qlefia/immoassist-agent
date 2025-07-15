@@ -1,251 +1,172 @@
 """
-Structured output schemas for ImmoAssist tools and agents.
+Output schema models for ImmoAssist.
 
-Following gemini-fullstack best practices with Pydantic models
-for type-safe, validated outputs.
+Pydantic models defining structured outputs for property data,
+investment calculations, and external service responses.
 """
 
-from typing import Any, Literal, Optional
-
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
-
-# === PROPERTY SEARCH OUTPUTS ===
 
 
 class PropertySearchItem(BaseModel):
     """Individual property item in search results."""
 
     id: str = Field(description="Unique property identifier")
-    title: str = Field(description="Property title/name")
-    location: str = Field(description="City and region")
-    price: int = Field(description="Purchase price in EUR")
-    size_sqm: int = Field(description="Size in square meters")
+    title: str = Field(description="Property title or description")
+    location: str = Field(description="Property location (city, district)")
+    price: int = Field(description="Property price in euros")
+    size_sqm: int = Field(description="Property size in square meters")
     rooms: int = Field(description="Number of rooms")
-    energy_class: str = Field(description="Energy efficiency class")
-    monthly_rental_income: int = Field(
-        description="Expected monthly rental income in EUR"
-    )
-    expected_roi: float = Field(description="Expected ROI percentage")
+    energy_class: str = Field(description="Energy efficiency class (A+ to H)")
+    monthly_rental_income: int = Field(description="Expected monthly rental income in euros")
+    expected_roi: float = Field(description="Expected return on investment as percentage")
 
 
 class PropertySearchResult(BaseModel):
-    """Search results for property queries."""
+    """Complete property search result with filters applied."""
 
-    properties: list[PropertySearchItem] = Field(description="List of found properties")
-    total_count: int = Field(description="Total number of matching properties")
-    search_criteria: dict[str, Any] = Field(description="Applied search filters")
-
-
-class PropertyDetailLocation(BaseModel):
-    """Detailed location information."""
-
-    city: str = Field(description="City name")
-    district: str = Field(description="District/neighborhood")
-    address: str = Field(description="Street address")
-    postal_code: Optional[str] = Field(default=None, description="Postal code")
+    properties: List[PropertySearchItem] = Field(description="List of matching properties")
+    total_count: int = Field(description="Total number of properties found")
+    search_criteria: dict = Field(description="Applied search filters and criteria")
 
 
 class PropertyDetailSpecs(BaseModel):
-    """Property specifications."""
+    """Detailed property specifications."""
+    
+    size_sqm: int = Field(description="Property size in square meters")
+    rooms: int = Field(description="Total number of rooms")
+    energy_class: str = Field(description="Energy efficiency classification")
+    completion_year: int = Field(description="Year of construction completion")
+    has_balcony: bool = Field(description="Whether property has balcony or terrace")
+    has_parking: bool = Field(description="Whether parking space is included")
 
-    size_sqm: int = Field(description="Size in square meters")
-    rooms: int = Field(description="Number of rooms")
-    energy_class: str = Field(description="Energy efficiency class")
-    completion_year: int = Field(description="Year of completion")
-    has_balcony: Optional[bool] = Field(default=None, description="Has balcony/terrace")
-    has_parking: Optional[bool] = Field(default=None, description="Has parking space")
+
+class PropertyDetailLocation(BaseModel):
+    """Detailed property location information."""
+
+    city: str = Field(description="City name")
+    district: str = Field(description="District or neighborhood")
+    address: str = Field(description="Full street address")
+    postal_code: str = Field(description="Postal code")
 
 
 class PropertyDetailFinancials(BaseModel):
-    """Financial details of property."""
+    """Financial details for property investment."""
 
-    monthly_rental_income: int = Field(
-        description="Expected monthly rental income in EUR"
-    )
-    expected_roi: float = Field(description="Expected ROI percentage")
-    rental_guarantee_months: Optional[int] = Field(
-        default=None, description="Rental guarantee duration"
-    )
-    management_fee_monthly: Optional[int] = Field(
-        default=None, description="Monthly management fee"
-    )
+    monthly_rental_income: int = Field(description="Expected monthly rental income")
+    expected_roi: float = Field(description="Expected return on investment percentage")
+    rental_guarantee_months: int = Field(description="Number of months with rental guarantee")
+    management_fee_monthly: int = Field(description="Monthly property management fee")
 
 
 class PropertyDetails(BaseModel):
-    """Detailed property information."""
+    """Complete detailed property information."""
 
-    id: str = Field(description="Property ID")
+    id: str = Field(description="Unique property identifier")
     title: str = Field(description="Property title")
-    price: int = Field(description="Purchase price in EUR")
+    price: int = Field(description="Property price in euros")
     location: PropertyDetailLocation = Field(description="Location details")
     specs: PropertyDetailSpecs = Field(description="Property specifications")
     financials: PropertyDetailFinancials = Field(description="Financial information")
 
 
-# === FINANCIAL CALCULATION OUTPUTS ===
-
-
 class CalculationSummary(BaseModel):
-    """Summary of investment calculation."""
+    """Summary of investment calculation inputs and basic outputs."""
 
-    purchase_price: int = Field(description="Total purchase price in EUR")
-    down_payment: int = Field(description="Down payment amount in EUR")
-    loan_amount: int = Field(description="Loan amount in EUR")
-    monthly_payment: float = Field(description="Monthly loan payment in EUR")
-    monthly_net_income: float = Field(
-        description="Monthly net income without tax benefits"
-    )
-    monthly_net_with_tax: float = Field(
-        description="Monthly net income with tax benefits"
-    )
+    purchase_price: int = Field(description="Total property purchase price")
+    down_payment: int = Field(description="Initial down payment amount")
+    loan_amount: int = Field(description="Financed loan amount")
+    monthly_payment: float = Field(description="Monthly loan payment")
+    monthly_net_income: float = Field(description="Net monthly income before tax benefits")
+    monthly_net_with_tax: float = Field(description="Net monthly income including tax savings")
 
 
 class GermanTaxBenefits(BaseModel):
-    """German real estate tax benefits."""
+    """German tax benefits for real estate investment."""
 
-    annual_depreciation: float = Field(
-        description="Annual depreciation amount (5% for new construction)"
-    )
-    annual_tax_savings: float = Field(
-        description="Annual tax savings from depreciation"
-    )
+    annual_depreciation: float = Field(description="Annual depreciation amount")
+    annual_tax_savings: float = Field(description="Annual tax savings from depreciation")
     monthly_tax_savings: float = Field(description="Monthly tax savings")
-    special_depreciation_rate: float = Field(
-        description="Applied depreciation rate (5% for new buildings)"
-    )
+    special_depreciation_rate: float = Field(description="Special depreciation rate percentage")
 
 
 class InvestmentRecommendation(BaseModel):
-    """Investment recommendation with analysis."""
+    """Investment recommendation with risk assessment."""
 
     recommended: bool = Field(description="Whether investment is recommended")
-    roi_percentage: float = Field(description="Annual ROI percentage")
-    payback_period_years: Optional[float] = Field(
-        default=None, description="Payback period in years"
-    )
-    risk_level: Literal["low", "medium", "high"] = Field(
-        default="medium", description="Investment risk level"
-    )
-    key_benefits: list[str] = Field(
-        default_factory=list, description="Key investment benefits"
-    )
-    risks: list[str] = Field(default_factory=list, description="Potential risks")
+    roi_percentage: float = Field(description="Return on investment percentage")
+    payback_period_years: Optional[float] = Field(description="Payback period in years")
+    risk_level: str = Field(description="Risk assessment level (low, medium, high)")
+    key_benefits: List[str] = Field(description="List of key investment benefits")
+    risks: List[str] = Field(description="List of potential investment risks")
 
 
 class InvestmentCalculationResult(BaseModel):
-    """Complete investment calculation result."""
+    """Complete investment calculation result with recommendations."""
 
     summary: CalculationSummary = Field(description="Calculation summary")
     tax_benefits: GermanTaxBenefits = Field(description="German tax benefits")
-    recommendation: InvestmentRecommendation = Field(
-        description="Investment recommendation"
-    )
-
-
-# === KNOWLEDGE BASE OUTPUTS ===
-
-
-class KnowledgeSearchResult(BaseModel):
-    """Result from knowledge base search."""
-
-    query: str = Field(description="Original search query")
-    results: list[str] = Field(description="Found knowledge base entries")
-    source_type: Literal["faq", "handbook", "process"] = Field(
-        description="Type of knowledge source"
-    )
-    confidence_score: Optional[float] = Field(
-        default=None, description="Search confidence score"
-    )
+    recommendation: InvestmentRecommendation = Field(description="Investment recommendation")
 
 
 class RagSource(BaseModel):
-    """A source document for a RAG response."""
+    """RAG knowledge source with citation information."""
 
-    title: str = Field(description="The title of the source document.")
-    link: str = Field(description="A link to the source document.")
+    title: str = Field(description="Source document title")
+    link: str = Field(description="Source document URL or reference")
 
 
 class RagResponse(BaseModel):
-    """The response from a RAG search."""
+    """RAG search response with answer and sources."""
 
-    answer: str = Field(description="The answer to the user's query.")
-    sources: list[RagSource] = Field(
-        description="A list of sources used to generate the answer."
-    )
-
-
-class ProcessGuideStep(BaseModel):
-    """Single step in a process guide."""
-
-    step_number: int = Field(description="Step number")
-    title: str = Field(description="Step title")
-    description: str = Field(description="Step description")
-    required_documents: Optional[list[str]] = Field(
-        default=None, description="Required documents"
-    )
-    estimated_duration: Optional[str] = Field(
-        default=None, description="Estimated duration"
-    )
-
-
-class ProcessGuide(BaseModel):
-    """Complete process guide."""
-
-    process_name: str = Field(description="Name of the process")
-    overview: str = Field(description="Process overview")
-    steps: list[ProcessGuideStep] = Field(description="Process steps")
-    total_duration: Optional[str] = Field(
-        default=None, description="Total estimated duration"
-    )
-    important_notes: Optional[list[str]] = Field(
-        default=None, description="Important notes"
-    )
-
-
-# === INTEGRATION OUTPUTS ===
-
-
-class HeyGenResponse(BaseModel):
-    """Response from HeyGen avatar generation."""
-
-    success: bool = Field(description="Whether the request was successful")
-    avatar_url: Optional[str] = Field(
-        default=None, description="Generated avatar video URL"
-    )
-    message_id: Optional[str] = Field(
-        default=None, description="Message ID for tracking"
-    )
-    error_message: Optional[str] = Field(
-        default=None, description="Error message if failed"
-    )
+    answer: str = Field(description="Generated answer from knowledge base")
+    sources: List[RagSource] = Field(description="List of source documents cited")
 
 
 class ElevenLabsResponse(BaseModel):
-    """Response from ElevenLabs audio generation."""
+    """Response from ElevenLabs text-to-speech service."""
 
-    success: bool = Field(description="Whether the request was successful")
-    audio_url: Optional[str] = Field(default=None, description="Generated audio URL")
-    duration_seconds: Optional[float] = Field(
-        default=None, description="Audio duration"
-    )
-    voice_id: Optional[str] = Field(default=None, description="Used voice ID")
-    error_message: Optional[str] = Field(
-        default=None, description="Error message if failed"
-    )
+    success: bool = Field(description="Whether audio generation was successful")
+    audio_url: Optional[str] = Field(description="URL to generated audio file")
+    duration_seconds: Optional[float] = Field(description="Audio duration in seconds")
+    voice_id: Optional[str] = Field(description="Voice identifier used")
+    error_message: Optional[str] = Field(description="Error message if generation failed")
 
 
-# === ERROR OUTPUTS ===
+class HeyGenResponse(BaseModel):
+    """Response from HeyGen avatar video service."""
+
+    success: bool = Field(description="Whether video generation was successful")
+    avatar_url: Optional[str] = Field(description="URL to generated avatar video")
+    message_id: Optional[str] = Field(description="Unique message identifier")
+    error_message: Optional[str] = Field(description="Error message if generation failed")
 
 
-class AgentError(BaseModel):
-    """Structured error output for agent failures."""
+class ConversationAnalysis(BaseModel):
+    """Analysis result from conversation context analysis."""
 
-    error_type: Literal["validation", "api", "timeout", "internal"] = Field(
-        description="Type of error"
-    )
-    error_code: str = Field(description="Error code for identification")
-    message: str = Field(description="Human-readable error message")
-    details: Optional[dict[str, Any]] = Field(
-        default=None, description="Additional error details"
-    )
-    recoverable: bool = Field(description="Whether the error is recoverable")
+    interaction_type: str = Field(description="Type of user interaction")
+    conversation_phase: str = Field(description="Current conversation phase")
+    emotional_tone: str = Field(description="Detected emotional tone")
+    topics_mentioned: List[str] = Field(description="Topics mentioned in input")
+    user_preferences: dict = Field(description="Extracted user preferences")
+    response_recommendations: List[str] = Field(description="Recommended response strategies")
+
+
+class MemoryOperation(BaseModel):
+    """Result of memory storage or retrieval operation."""
+    
+    status: str = Field(description="Operation status (success, error, empty)")
+    message: str = Field(description="Status message or description")
+    data: Optional[Union[dict, list, str]] = Field(description="Retrieved or stored data")
+
+
+class MarketInsight(BaseModel):
+    """Market analysis and insights for specific location."""
+    
+    location: str = Field(description="Geographic location analyzed")
+    property_type: str = Field(description="Type of property analyzed")
+    market_metrics: dict = Field(description="Current market metrics and trends")
+    investment_outlook: dict = Field(description="Investment potential and forecasts")
+    risk_factors: List[str] = Field(description="Identified market risk factors")

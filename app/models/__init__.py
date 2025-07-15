@@ -1,5 +1,5 @@
 """
-Domain models for ImmoAssist enterprise system.
+Domain models for ImmoAssist
 
 This module exports all domain models used across the application,
 following clean architecture principles with clear separation of concerns.

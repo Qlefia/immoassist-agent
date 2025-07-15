@@ -14,11 +14,12 @@ import uvicorn
 from dotenv import load_dotenv
 from google.adk.cli.fast_api import get_fast_api_app
 
+# Load environment variables from .env file
 load_dotenv()
 
 # Setup environment
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west1")
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west3")
 
 
 def main():
@@ -31,7 +32,7 @@ def main():
     print("Starting ImmoAssist Agent...")
     print(f"Agents directory: {agents_dir}")
     print("   (Looking for agent packages like 'app' here)")
-    print(" Web interface will be available at: http://localhost:8001")
+    print(" Web interface will be available at: http://localhost:8000")
 
     try:
         # Create FastAPI app with ADK
@@ -41,8 +42,10 @@ def main():
             allow_origins=["*"],  # Allow all origins for development
         )
 
+        # Get port from environment variable (Cloud Run requires PORT)
+        port = int(os.environ.get("PORT", 8000))
         # Start server
-        uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
 
     except Exception as e:
         print(f"❌ Error starting agent: {e}")

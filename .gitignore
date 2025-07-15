@@ -1,71 +1,14 @@
-# Python
-__pycache__/
-*.py[cod]
-*.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Cursor IDE rules
+.cursor/
 
-# Virtual Environment
-venv/
-env/
-ENV/
-.venv/
-.env/
-
-# Environment variables
-.env
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Operating System
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# ADK specific
-adk_output.log
-
-# Vector store (can be large)
-vector_store/
-vector_store_backup/
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-
-# Google Cloud credentials (if stored locally)
-credentials.json
-service-account*.json
-gothic-agility-464209-f4-39095fb8e054.json
-
+# Python cache and virtual environments
 .mypy_cache/
 venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+
+# Service account files
+service-account*.json
+gothic-agility-464209-f4-39095fb8e054.json
