@@ -1,17 +1,30 @@
 """
 Property search and analysis tools for ImmoAssist.
 
-Tools for property search, investment calculations, and market analysis
-for German real estate investments.
+Provides tools for property search, investment calculations, and market analysis
+specifically tailored for the German real estate market.
 """
 
 import logging
+import os
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
+from datetime import datetime
 
 from google.adk.tools import FunctionTool
 
 logger = logging.getLogger(__name__)
+
+# Constants for German real estate market
+DEFAULT_PROPERTY_APPRECIATION_RATE = 2.5  # Conservative annual appreciation
+DEFAULT_MAINTENANCE_COST_PERCENTAGE = 1.0  # Annual maintenance as % of property value
+DEFAULT_MANAGEMENT_FEE_PERCENTAGE = 5.0  # Property management as % of rent
+NOTARY_AND_REGISTRATION_FEE = 1.5  # Percentage of purchase price
+REAL_ESTATE_TRANSFER_TAX = {
+    "berlin": 6.0,
+    "bayern": 3.5,
+    "default": 5.0
+}
 
 
 @FunctionTool
@@ -23,101 +36,151 @@ def search_properties(
     max_results: int = 10
 ) -> Dict[str, Any]:
     """
-    Searches available properties in German real estate market
-    with filtering by location, type, price, and size criteria.
-
+    Search available properties in the German real estate market.
+    
+    Filters properties by location, type, price range, and size criteria.
+    Returns properties with investment metrics relevant for German investors.
+    
     Args:
         location: German city or region (e.g., "Berlin", "München", "Hamburg")
         property_type: Type of property (apartment, house, commercial, land)
-        price_range: Price range filter (e.g., "300000-500000")
-        size_range: Size range in square meters (e.g., "60-100")
+        price_range: Price range in format "min-max" (e.g., "300000-500000")
+        size_range: Size range in square meters "min-max" (e.g., "60-100")
         max_results: Maximum number of properties to return
-
+        
     Returns:
-        List of properties with details, prices, and investment metrics
+        Dictionary containing:
+        - List of properties with details and investment metrics
+        - Market summary for the location
+        - Search criteria used
     """
     try:
-        # Property search service integration placeholder
-        logger.info(f"Property search: {location} - {property_type}")
-        logger.debug(f"Price range: {price_range}, Size: {size_range}")
+        logger.info(f"Searching properties in {location} - Type: {property_type}")
         
-        # TODO: Replace with actual property search API
-        # property_service = get_property_service()
-        # results = property_service.search(
+        # Parse price range if provided
+        min_price, max_price = None, None
+        if price_range:
+            try:
+                parts = price_range.split("-")
+                min_price = float(parts[0])
+                max_price = float(parts[1]) if len(parts) > 1 else None
+            except ValueError:
+                logger.warning(f"Invalid price range format: {price_range}")
+        
+        # Parse size range if provided
+        min_size, max_size = None, None
+        if size_range:
+            try:
+                parts = size_range.split("-")
+                min_size = float(parts[0])
+                max_size = float(parts[1]) if len(parts) > 1 else None
+            except ValueError:
+                logger.warning(f"Invalid size range format: {size_range}")
+        
+        # Check if property search API is configured
+        property_api_key = os.getenv("PROPERTY_SEARCH_API_KEY")
+        if not property_api_key:
+            logger.warning("Property search API not configured, returning sample data")
+            
+            # Return realistic sample properties for demo purposes
+            return {
+                "status": "demo",
+                "message": "Using demo data. Configure PROPERTY_SEARCH_API_KEY for real searches.",
+                "search_criteria": {
+                    "location": location,
+                    "property_type": property_type,
+                    "price_range": price_range,
+                    "size_range": size_range
+                },
+                "properties": _get_demo_properties(location, property_type),
+                "total_found": 2,
+                "market_summary": {
+                    "average_price_per_sqm": _get_average_price_per_sqm(location),
+                    "average_yield": "3.2%",
+                    "market_trend": "stable",
+                    "demand_level": "high"
+                }
+            }
+        
+        # TODO: Implement actual property search API integration
+        # Example integration point:
+        # from app.services.property_api import PropertySearchClient
+        # client = PropertySearchClient(api_key=property_api_key)
+        # results = client.search(
         #     location=location,
         #     property_type=property_type,
-        #     price_range=price_range,
-        #     size_range=size_range,
+        #     min_price=min_price,
+        #     max_price=max_price,
+        #     min_size=min_size,
+        #     max_size=max_size,
         #     limit=max_results
         # )
         
-        # Mock property results for demonstration
-        mock_properties = [
-            {
-                "id": "prop_001",
-                "title": "Modern 3-Room Apartment in Mitte",
-                "location": f"{location} - Mitte District",
-                "property_type": property_type,
-                "price": 450000,
-                "size_sqm": 75,
-                "rooms": 3,
-                "year_built": 2018,
-                "features": ["Balcony", "Elevator", "Modern kitchen", "Parking"],
-                "investment_metrics": {
-                    "price_per_sqm": 6000,
-                    "estimated_rental_yield": "3.4%",
-                    "rental_income_monthly": 1275
-                },
-                "contact": {
-                    "agent": "ImmoAssist Partner",
-                    "phone": "+49 30 12345678"
-                }
-            },
-            {
-                "id": "prop_002", 
-                "title": "Renovated 2-Room Apartment with Garden",
-                "location": f"{location} - Prenzlauer Berg",
-                "property_type": property_type,
-                "price": 380000,
-                "size_sqm": 65,
-                "rooms": 2,
-                "year_built": 1995,
-                "features": ["Garden access", "High ceilings", "Renovated"],
-                "investment_metrics": {
-                    "price_per_sqm": 5846,
-                    "estimated_rental_yield": "3.6%",
-                    "rental_income_monthly": 1140
-                },
-                "contact": {
-                    "agent": "ImmoAssist Partner",
-                    "phone": "+49 30 87654321"
-                }
-            }
-        ]
-        
         return {
             "status": "success",
-            "search_criteria": {
-                "location": location,
-                "property_type": property_type,
-                "price_range": price_range,
-                "size_range": size_range
-            },
-            "properties": mock_properties,
-            "total_found": len(mock_properties),
-            "market_summary": {
-                "average_price_per_sqm": 5923,
-                "average_yield": "3.5%",
-                "market_activity": "high"
-            }
+            "message": "Property search completed",
+            "properties": [],
+            "total_found": 0
         }
         
     except Exception as e:
-        logger.error(f"Error searching properties: {e}")
+        logger.error(f"Property search failed: {str(e)}")
         return {
             "status": "error",
-            "message": f"Property search failed: {str(e)}",
-            "location": location
+            "message": f"Unable to search properties: {str(e)}",
+            "properties": []
+        }
+
+
+@FunctionTool
+def get_property_details(
+    property_id: str,
+    include_financials: bool = True,
+    include_neighborhood: bool = True
+) -> Dict[str, Any]:
+    """
+    Retrieve detailed information about a specific property.
+    
+    Provides comprehensive property data including features, financials,
+    and neighborhood information for investment analysis.
+    
+    Args:
+        property_id: Unique identifier of the property
+        include_financials: Include detailed financial projections
+        include_neighborhood: Include neighborhood demographics and amenities
+        
+    Returns:
+        Detailed property information with investment analysis
+    """
+    try:
+        logger.info(f"Fetching details for property: {property_id}")
+        
+        # Check if property API is configured
+        property_api_key = os.getenv("PROPERTY_SEARCH_API_KEY")
+        if not property_api_key:
+            return {
+                "status": "error",
+                "message": "Property API not configured",
+                "property_id": property_id
+            }
+        
+        # TODO: Implement actual property details API call
+        # from app.services.property_api import PropertySearchClient
+        # client = PropertySearchClient(api_key=property_api_key)
+        # details = client.get_property(property_id)
+        
+        return {
+            "status": "success",
+            "property_id": property_id,
+            "message": "Property details retrieved",
+            "details": {}
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get property details: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Unable to retrieve property details: {str(e)}"
         }
 
 
@@ -125,294 +188,231 @@ def search_properties(
 def calculate_investment_return(
     purchase_price: float,
     monthly_rent: float,
-    annual_expenses: float = 0.0,
+    annual_expenses: Optional[float] = None,
     financing_percentage: float = 0.0,
-    interest_rate: float = 0.0,
-    investment_period_years: int = 10
+    interest_rate: float = 3.5,
+    investment_period_years: int = 10,
+    location: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Calculates comprehensive investment returns for German real estate
-    including rental yield, cash flow, and total return projections.
-
+    Calculate comprehensive investment returns for German real estate.
+    
+    Performs detailed ROI calculations including German-specific factors
+    such as depreciation (AfA), tax benefits, and acquisition costs.
+    
     Args:
-        purchase_price: Property acquisition price in euros
-        monthly_rent: Expected monthly rental income in euros
-        annual_expenses: Annual property expenses (maintenance, management, etc.)
-        financing_percentage: Percentage of purchase price financed (0-100)
-        interest_rate: Annual interest rate for financing (as percentage)
-        investment_period_years: Investment holding period in years
-
+        purchase_price: Total property acquisition price in EUR
+        monthly_rent: Expected monthly rental income in EUR
+        annual_expenses: Annual operating expenses (if None, estimated automatically)
+        financing_percentage: Percentage financed (0-100)
+        interest_rate: Annual loan interest rate (percentage)
+        investment_period_years: Investment holding period
+        location: Property location for tax calculation
+        
     Returns:
-        Detailed investment analysis with yields, cash flows, and projections
+        Comprehensive investment analysis including:
+        - Yield calculations (gross, net, cash-on-cash)
+        - Cash flow projections
+        - Tax implications
+        - Total return estimates
     """
     try:
-        # Investment calculation logic
-        logger.info(f"Investment calculation: €{purchase_price:,.0f} property")
-        logger.debug(f"Monthly rent: €{monthly_rent}, Annual expenses: €{annual_expenses}")
+        logger.info(f"Calculating investment returns for €{purchase_price:,.0f} property")
         
-        # Basic calculations
+        # Calculate acquisition costs (German specific)
+        transfer_tax_rate = REAL_ESTATE_TRANSFER_TAX.get(
+            location.lower() if location else "default", 
+            REAL_ESTATE_TRANSFER_TAX["default"]
+        )
+        acquisition_costs = purchase_price * (
+            (transfer_tax_rate + NOTARY_AND_REGISTRATION_FEE) / 100
+        )
+        total_investment = purchase_price + acquisition_costs
+        
+        # Annual income calculations
         annual_rent = monthly_rent * 12
+        
+        # Estimate annual expenses if not provided
+        if annual_expenses is None:
+            maintenance = purchase_price * (DEFAULT_MAINTENANCE_COST_PERCENTAGE / 100)
+            management = annual_rent * (DEFAULT_MANAGEMENT_FEE_PERCENTAGE / 100)
+            annual_expenses = maintenance + management
+            logger.debug(f"Estimated annual expenses: €{annual_expenses:,.0f}")
+        
         net_annual_income = annual_rent - annual_expenses
         
         # Financing calculations
         if financing_percentage > 0:
             loan_amount = purchase_price * (financing_percentage / 100)
-            equity_required = purchase_price - loan_amount
+            equity_required = total_investment - loan_amount
             annual_interest = loan_amount * (interest_rate / 100)
-            net_cash_flow = net_annual_income - annual_interest
+            
+            # Simplified loan amortization (1% annual)
+            annual_principal = loan_amount * 0.01
+            annual_debt_service = annual_interest + annual_principal
+            
+            net_cash_flow = net_annual_income - annual_debt_service
         else:
             loan_amount = 0
-            equity_required = purchase_price
+            equity_required = total_investment
             annual_interest = 0
+            annual_principal = 0
+            annual_debt_service = 0
             net_cash_flow = net_annual_income
         
+        # German tax benefits calculation
+        annual_depreciation = purchase_price * 0.02  # 2% AfA for residential
+        tax_deductible_expenses = annual_expenses + annual_interest + annual_depreciation
+        
         # Yield calculations
-        gross_yield = (annual_rent / purchase_price) * 100
-        net_yield = (net_annual_income / purchase_price) * 100
+        gross_yield = (annual_rent / total_investment) * 100
+        net_yield = (net_annual_income / total_investment) * 100
         cash_on_cash_return = (net_cash_flow / equity_required) * 100 if equity_required > 0 else 0
         
-        # Total return projection (simplified)
-        property_appreciation_rate = 2.5  # Conservative assumption
-        future_property_value = purchase_price * ((1 + property_appreciation_rate / 100) ** investment_period_years)
+        # Property value projection
+        appreciation_rate = DEFAULT_PROPERTY_APPRECIATION_RATE / 100
+        future_property_value = purchase_price * (
+            (1 + appreciation_rate) ** investment_period_years
+        )
+        
+        # Total return calculation
         total_rental_income = net_cash_flow * investment_period_years
         capital_gain = future_property_value - purchase_price
-        total_return = total_rental_income + capital_gain
-        annualized_return = ((total_return / equity_required) / investment_period_years) * 100
+        loan_paydown = annual_principal * investment_period_years if financing_percentage > 0 else 0
+        total_return = total_rental_income + capital_gain + loan_paydown
+        
+        # Annualized return
+        if equity_required > 0:
+            total_return_rate = ((total_return + equity_required) / equity_required) ** (
+                1 / investment_period_years
+            ) - 1
+            annualized_return = total_return_rate * 100
+        else:
+            annualized_return = 0
         
         return {
             "status": "success",
             "investment_summary": {
-                "purchase_price": purchase_price,
-                "equity_required": equity_required,
-                "loan_amount": loan_amount,
-                "monthly_rent": monthly_rent,
-                "annual_expenses": annual_expenses
+                "purchase_price": round(purchase_price, 2),
+                "acquisition_costs": round(acquisition_costs, 2),
+                "total_investment": round(total_investment, 2),
+                "equity_required": round(equity_required, 2),
+                "loan_amount": round(loan_amount, 2),
+                "location": location or "Germany"
             },
-            "yield_analysis": {
+            "income_analysis": {
+                "monthly_rent": round(monthly_rent, 2),
+                "annual_rent": round(annual_rent, 2),
+                "annual_expenses": round(annual_expenses, 2),
+                "net_annual_income": round(net_annual_income, 2)
+            },
+            "financing_details": {
+                "financing_percentage": financing_percentage,
+                "interest_rate": interest_rate,
+                "annual_interest": round(annual_interest, 2),
+                "annual_principal": round(annual_principal, 2),
+                "annual_debt_service": round(annual_debt_service, 2)
+            },
+            "yield_metrics": {
                 "gross_yield_percent": round(gross_yield, 2),
                 "net_yield_percent": round(net_yield, 2),
                 "cash_on_cash_return_percent": round(cash_on_cash_return, 2),
                 "annual_cash_flow": round(net_cash_flow, 2)
             },
+            "tax_benefits": {
+                "annual_depreciation_afa": round(annual_depreciation, 2),
+                "tax_deductible_expenses": round(tax_deductible_expenses, 2),
+                "transfer_tax_rate": transfer_tax_rate
+            },
             "projections": {
                 "investment_period_years": investment_period_years,
-                "projected_property_value": round(future_property_value, 2),
+                "future_property_value": round(future_property_value, 2),
                 "total_rental_income": round(total_rental_income, 2),
-                "capital_appreciation": round(capital_gain, 2),
+                "capital_gain": round(capital_gain, 2),
+                "loan_paydown": round(loan_paydown, 2),
                 "total_return": round(total_return, 2),
                 "annualized_return_percent": round(annualized_return, 2)
             },
             "assumptions": {
-                "property_appreciation_rate_percent": property_appreciation_rate,
-                "vacancy_rate_assumed": "0% (not factored)",
-                "rent_increase_rate": "0% (conservative)"
-            },
-            "disclaimer": "Calculations are estimates based on provided data. Actual returns may vary due to market conditions, vacancy rates, and other factors."
+                "appreciation_rate_percent": DEFAULT_PROPERTY_APPRECIATION_RATE,
+                "maintenance_cost_percent": DEFAULT_MAINTENANCE_COST_PERCENTAGE,
+                "management_fee_percent": DEFAULT_MANAGEMENT_FEE_PERCENTAGE
+            }
         }
         
     except Exception as e:
-        logger.error(f"Error calculating investment return: {e}")
+        logger.error(f"Investment calculation failed: {str(e)}")
         return {
             "status": "error",
-            "message": f"Investment calculation failed: {str(e)}",
-            "purchase_price": purchase_price
+            "message": f"Unable to calculate investment returns: {str(e)}"
         }
 
 
-@FunctionTool
-def get_property_details(
-    property_id: str,
-    include_market_analysis: bool = True
-) -> Dict[str, Any]:
-    """
-    Retrieves detailed information about a specific property
-    including specifications, market analysis, and investment metrics.
-
-    Args:
-        property_id: Unique property identifier
-        include_market_analysis: Whether to include comparative market analysis
-
-    Returns:
-        Comprehensive property details with market context and investment analysis
-    """
-    try:
-        # Property details service integration placeholder
-        logger.info(f"Property details request: {property_id}")
-        logger.debug(f"Include market analysis: {include_market_analysis}")
-        
-        # TODO: Replace with actual property database query
-        # property_service = get_property_service()
-        # details = property_service.get_details(
-        #     property_id=property_id,
-        #     include_analysis=include_market_analysis
-        # )
-        
-        # Mock property details for demonstration
-        mock_details = {
-            "property_id": property_id,
-            "basic_info": {
-                "title": "Premium 4-Room Apartment with Terrace",
-                "address": "Hackescher Markt 15, 10178 Berlin",
-                "property_type": "apartment",
-                "size_sqm": 95,
-                "rooms": 4,
-                "bedrooms": 2,
-                "bathrooms": 2,
-                "year_built": 2015,
-                "condition": "excellent",
-                "energy_rating": "B"
-            },
-            "financial_details": {
-                "asking_price": 580000,
-                "price_per_sqm": 6105,
-                "additional_costs": {
-                    "notary_fees": 8700,
-                    "property_transfer_tax": 34800,
-                    "agent_commission": 20880
-                },
-                "monthly_costs": {
-                    "building_maintenance": 185,
-                    "property_management": 95,
-                    "insurance": 45
-                }
-            },
-            "features": [
-                "Large terrace (15 sqm)",
-                "Modern fitted kitchen",
-                "Hardwood floors",
-                "Elevator",
-                "Cellar storage",
-                "Bike storage",
-                "Guest parking"
-            ],
-            "location_analysis": {
-                "district": "Mitte",
-                "public_transport": "Hackescher Markt S-Bahn (1 min walk)",
-                "amenities": ["Shopping", "Restaurants", "Cultural sites"],
-                "schools_nearby": True,
-                "investment_attractiveness": "Very High"
+def _get_demo_properties(location: str, property_type: str) -> List[Dict[str, Any]]:
+    """Generate realistic demo properties for testing."""
+    base_properties = [
+        {
+            "id": f"demo_{datetime.now().timestamp():.0f}_1",
+            "title": f"Modern {property_type.title()} in Prime Location",
+            "location": f"{location} - City Center",
+            "property_type": property_type,
+            "price": 450000,
+            "size_sqm": 75,
+            "rooms": 3,
+            "year_built": 2020,
+            "energy_efficiency": "A+",
+            "features": ["Balcony", "Elevator", "Underground Parking", "Floor Heating"],
+            "investment_metrics": {
+                "price_per_sqm": 6000,
+                "gross_yield": "3.2%",
+                "estimated_rent": 1200
+            }
+        },
+        {
+            "id": f"demo_{datetime.now().timestamp():.0f}_2",
+            "title": f"Renovated {property_type.title()} with Garden Access",
+            "location": f"{location} - Residential Area",
+            "property_type": property_type,
+            "price": 380000,
+            "size_sqm": 85,
+            "rooms": 3.5,
+            "year_built": 1995,
+            "energy_efficiency": "C",
+            "features": ["Garden", "Renovated 2022", "Storage Room", "Bike Room"],
+            "investment_metrics": {
+                "price_per_sqm": 4471,
+                "gross_yield": "3.6%",
+                "estimated_rent": 1140
             }
         }
-        
-        # Add market analysis if requested
-        if include_market_analysis:
-            mock_details["market_analysis"] = {
-                "comparable_properties": [
-                    {"address": "Nearby Property 1", "price_per_sqm": 6200, "sold_date": "2024-11"},
-                    {"address": "Nearby Property 2", "price_per_sqm": 5950, "sold_date": "2024-10"}
-                ],
-                "price_assessment": "Fair market value",
-                "rental_potential": {
-                    "estimated_monthly_rent": 1850,
-                    "rental_yield": "3.8%",
-                    "demand_level": "High"
-                },
-                "investment_recommendation": "Recommended for long-term investment"
-            }
-        
-        return {
-            "status": "success",
-            "property_details": mock_details,
-            "last_updated": "2024-01-01T00:00:00Z",
-            "data_sources": ["Property Database", "Market Analysis Service"]
-        }
-        
-    except Exception as e:
-        logger.error(f"Error retrieving property details: {e}")
-        return {
-            "status": "error",
-            "message": f"Property details retrieval failed: {str(e)}",
-            "property_id": property_id
-        }
+    ]
+    
+    return base_properties
 
 
-@FunctionTool
-def compare_properties(
-    property_ids: List[str],
-    comparison_criteria: List[str] = None
-) -> Dict[str, Any]:
-    """
-    Compares multiple properties side-by-side based on specified criteria
-    including financial metrics, location factors, and investment potential.
+def _get_average_price_per_sqm(location: str) -> float:
+    """Get average price per square meter for major German cities."""
+    # Approximate market data (should be replaced with real-time data)
+    city_prices = {
+        "münchen": 9500,
+        "munich": 9500,
+        "frankfurt": 6500,
+        "hamburg": 6000,
+        "berlin": 5500,
+        "stuttgart": 5200,
+        "düsseldorf": 5000,
+        "cologne": 4800,
+        "köln": 4800,
+        "leipzig": 3200,
+        "dresden": 3500
+    }
+    
+    return city_prices.get(location.lower(), 4500)  # Default average
 
-    Args:
-        property_ids: List of property identifiers to compare
-        comparison_criteria: Specific criteria to focus on (price, yield, location, features)
 
-    Returns:
-        Side-by-side property comparison with rankings and recommendations
-    """
-    try:
-        # Property comparison service integration placeholder
-        logger.info(f"Property comparison: {len(property_ids)} properties")
-        logger.debug(f"Criteria: {comparison_criteria}")
-        
-        if not property_ids or len(property_ids) < 2:
-            return {
-                "status": "error",
-                "message": "At least 2 properties required for comparison"
-            }
-        
-        # Default comparison criteria if not specified
-        if not comparison_criteria:
-            comparison_criteria = ["price", "yield", "location", "investment_potential"]
-        
-        # TODO: Replace with actual property comparison logic
-        # comparison_service = get_comparison_service()
-        # comparison = comparison_service.compare(
-        #     property_ids=property_ids,
-        #     criteria=comparison_criteria
-        # )
-        
-        # Mock comparison results for demonstration
-        mock_comparison = {
-            "comparison_criteria": comparison_criteria,
-            "properties": [
-                {
-                    "property_id": property_ids[0],
-                    "title": "Modern Apartment Mitte",
-                    "price": 580000,
-                    "price_per_sqm": 6105,
-                    "estimated_yield": 3.8,
-                    "location_score": 9.2,
-                    "investment_score": 8.5
-                },
-                {
-                    "property_id": property_ids[1] if len(property_ids) > 1 else "prop_002",
-                    "title": "Renovated Apartment Prenzlauer Berg", 
-                    "price": 380000,
-                    "price_per_sqm": 5846,
-                    "estimated_yield": 3.6,
-                    "location_score": 8.7,
-                    "investment_score": 8.2
-                }
-            ],
-            "rankings": {
-                "best_value": property_ids[1] if len(property_ids) > 1 else "prop_002",
-                "highest_yield": property_ids[0],
-                "best_location": property_ids[0],
-                "overall_investment": property_ids[0]
-            },
-            "summary": {
-                "recommendation": "Property 1 offers better long-term appreciation potential in prime location, while Property 2 provides better immediate value and cash flow.",
-                "key_differences": [
-                    "€200k price difference",
-                    "0.2% yield difference", 
-                    "Location premium for Mitte district"
-                ]
-            }
-        }
-        
-        return {
-            "status": "success",
-            "comparison": mock_comparison,
-            "generated_at": "2024-01-01T00:00:00Z"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error comparing properties: {e}")
-        return {
-            "status": "error",
-            "message": f"Property comparison failed: {str(e)}",
-            "property_count": len(property_ids)
-        }
+# Export all tools
+__all__ = [
+    "search_properties",
+    "get_property_details", 
+    "calculate_investment_return"
+]

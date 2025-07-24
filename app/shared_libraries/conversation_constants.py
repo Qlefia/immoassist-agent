@@ -14,6 +14,7 @@ USER_PREFERENCES = "user_preferences"
 CONVERSATION_PHASE = "conversation_phase"
 LAST_INTERACTION_TYPE = "last_interaction_type"
 SESSION_START_TIME = "session_start_time"
+COURSE_MODE = "course_mode"
 
 # Current interaction context
 CURRENT_USER_INPUT = "current_user_input"

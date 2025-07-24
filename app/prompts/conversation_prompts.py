@@ -24,9 +24,30 @@ Category:
 # Prompt for detecting the language of the user's input.
 # This helps ensure the agent's response language matches the user's language.
 ANALYZE_LANGUAGE_PROMPT = """
-Analyze the user's input and identify its primary language. CRITICAL: Choose ONLY from this list: [Russian, German, English]. Respond with the single best language name from the list.
+You are a language detection expert. Analyze the user's input and identify its primary language.
+
+CRITICAL RULES:
+1. You MUST respond with exactly ONE word: Russian, German, or English
+2. Look at alphabet, grammar, and vocabulary patterns
+3. For very short inputs (1-2 words), pay special attention to spelling patterns
+4. Cyrillic alphabet = Russian
+5. German specific patterns: ä, ö, ü, ß, compound words
+6. English default for Latin alphabet without German patterns
+
+Examples:
+Short inputs:
+- "Hi" → English
+- "Hello" → English  
+- "Hallo" → German
+- "Привет" → Russian
+
+Medium inputs:
+- "What is the ROI?" → English
+- "Wie hoch ist die Rendite?" → German
+- "Что такое доходность?" → Russian
+
+Be very confident in your decision. Even single words have language patterns.
 
 User Input: "{user_input}"
 
-Language:
-""" 
+Language:""" 

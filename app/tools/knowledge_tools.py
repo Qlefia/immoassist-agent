@@ -1,18 +1,20 @@
 """
 Knowledge management tools for ImmoAssist.
-"""
-import os
 
+Provides RAG-based knowledge retrieval for German real estate investment information.
+"""
+
+import os
 from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
 from vertexai.preview import rag
-
 from app.config import config
 
-
-search_knowledge_rag = VertexAiRagRetrieval(
-    name="search_knowledge_rag",
+# Main knowledge base search tool
+search_knowledge_base = VertexAiRagRetrieval(
+    name="search_knowledge_base",
     description=(
-        "Use this tool to retrieve documentation and reference materials for the question from the RAG corpus,"
+        "Search the ImmoAssist knowledge base for German real estate investment information, "
+        "including financing strategies, tax benefits, depreciation rules, and best practices."
     ),
     rag_resources=[
         rag.RagResource(
@@ -21,4 +23,7 @@ search_knowledge_rag = VertexAiRagRetrieval(
     ],
     similarity_top_k=10,
     vector_distance_threshold=0.6,
-) 
+)
+
+# Export the tool
+__all__ = ["search_knowledge_base"] 

@@ -134,13 +134,6 @@ class ElevenLabsResponse(BaseModel):
     error_message: Optional[str] = Field(description="Error message if generation failed")
 
 
-class HeyGenResponse(BaseModel):
-    """Response from HeyGen avatar video service."""
-
-    success: bool = Field(description="Whether video generation was successful")
-    avatar_url: Optional[str] = Field(description="URL to generated avatar video")
-    message_id: Optional[str] = Field(description="Unique message identifier")
-    error_message: Optional[str] = Field(description="Error message if generation failed")
 
 
 class ConversationAnalysis(BaseModel):

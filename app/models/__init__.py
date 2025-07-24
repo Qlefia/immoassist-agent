@@ -22,7 +22,7 @@ from .output_schemas import (
     ElevenLabsResponse,
     GermanTaxBenefits,
     # Integration outputs
-    HeyGenResponse,
+
     InvestmentCalculationResult,
     InvestmentRecommendation,
     # Knowledge base outputs
@@ -58,7 +58,7 @@ __all__ = [
     "ElevenLabsResponse",
     "FinancialCalculation",
     "GermanTaxBenefits",
-    "HeyGenResponse",
+
     "InvestmentCalculationResult",
     "InvestmentMetrics",
     "InvestmentRecommendation",

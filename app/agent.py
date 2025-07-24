@@ -12,29 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ImmoAssist Multi-Agent System
-
-Based on Google ADK gemini-fullstack
-"""
+"""ImmoAssist Multi-Agent System for German Real Estate Investment Consulting."""
 
 import logging
+from typing import List, Optional
 
-try:
-    from google.adk.agents import Agent
-    from google.adk.tools.agent_tool import AgentTool
-except ImportError:
-    # Fallback for development environment if Google ADK is not available
-    print("Warning: Could not import Google ADK components. Using fallback.")
-
-    class Agent:
-        def __init__(self, **kwargs):
-            pass
-
-    class AgentTool:
-        def __init__(self, **kwargs):
-            pass
-
+from google.adk.agents import Agent, SequentialAgent
+from google.adk.tools.agent_tool import AgentTool
 
 from .config import config
 from .prompts import (
@@ -43,12 +27,15 @@ from .prompts import (
     CALCULATOR_SPECIALIST_PROMPT,
     MARKET_ANALYST_PROMPT,
     ROOT_AGENT_PROMPT,
+    LEGAL_SPECIALIST_PROMPT,
+    COORDINATION_SPECIALIST_PROMPT,
+    PRESENTATION_SPECIALIST_PROMPT,
 )
 from .tools.integration_tools import (
-    generate_elevenlabs_audio,
-    send_heygen_avatar_message,
+    generate_audio_elevenlabs,
+    send_email
 )
-from .tools.knowledge_tools import search_knowledge_rag
+from .tools.knowledge_tools import search_knowledge_base
 from .tools.property_tools import (
     calculate_investment_return,
     get_property_details,
@@ -60,96 +47,109 @@ from .tools.memory_tools import (
     recall_conversation,
     initialize_conversation_memory_callback
 )
+from .tools.legal_tools import search_legal_rag
+from .tools.presentation_tools import search_presentation_rag
 from .shared_libraries.conversation_callbacks import (
     combined_before_agent_callback,
     after_agent_conversation_callback,
-    conversation_style_enhancer_callback,
-    before_tool_conversation_callback,
 )
 
-# Configure logging for the agent module
-logging.basicConfig(level=getattr(logging, config.log_level))
 logger = logging.getLogger(__name__)
 
-
-# === SPECIALIST AGENTS ===
-# Each agent is responsible for a specific domain and has domain-specific tools
-
+# Knowledge Specialist Agent
 knowledge_specialist = Agent(
     model=config.specialist_model,
-    name="knowledge_specialist",
-    description="Expert in German real estate law, regulations, and ImmoAssist processes.",
+    name="KnowledgeSpecialist",
     instruction=KNOWLEDGE_SPECIALIST_PROMPT,
-    tools=[search_knowledge_rag],
+    tools=[search_knowledge_base],
 )
 
+# Property Specialist Agent  
 property_specialist = Agent(
     model=config.specialist_model,
-    name="property_specialist",
-    description="Expert in property search, evaluation, and German real estate market analysis.",
+    name="PropertySpecialist",
     instruction=PROPERTY_SPECIALIST_PROMPT,
-    tools=[search_properties, get_property_details],
+    tools=[
+        search_properties,
+        get_property_details,
+    ],
 )
 
+# Calculator Specialist Agent
 calculator_specialist = Agent(
     model=config.specialist_model,
-    name="calculator_specialist",
-    description="Expert in financial calculations, ROI analysis, and investment optimization.",
+    name="CalculatorSpecialist",
     instruction=CALCULATOR_SPECIALIST_PROMPT,
     tools=[calculate_investment_return],
 )
 
+# Market Analyst Agent
 market_analyst = Agent(
     model=config.specialist_model,
-    name="market_analyst",
-    description="Expert in German real estate market trends, analytics, and investment strategy.",
+    name="MarketAnalyst",
     instruction=MARKET_ANALYST_PROMPT,
-    tools=[],  # Market data tools can be added here
+    tools=[],  # Analysis based on provided data
 )
 
-# === COORDINATION AGENT ===
-# Main agent that coordinates specialist agents and manages client interactions
+# Legal Specialist Agent
+legal_specialist = Agent(
+    model=config.specialist_model,
+    name="LegalSpecialist",
+    instruction=LEGAL_SPECIALIST_PROMPT,
+            tools=[search_legal_rag],
+)
 
-# === AGENT TOOLS (for the root agent) ===
+# Presentation Specialist Agent
+presentation_specialist = Agent(
+    model=config.specialist_model,
+    name="PresentationSpecialist",
+    instruction=PRESENTATION_SPECIALIST_PROMPT,
+            tools=[search_presentation_rag],
+)
 
-knowledge_specialist_tool = AgentTool(agent=knowledge_specialist)
+# Build Coordination Specialist tools dynamically
+def _build_coordination_tools() -> List:
+    """Build coordination specialist tools based on enabled features."""
+    tools = [
+        analyze_conversation_context,
+        memorize_conversation,
+        recall_conversation,
+    ]
+    
+    # Add integration tools if features are enabled
+    if config.get_feature_flag("enable_voice_synthesis"):
+        tools.append(generate_audio_elevenlabs)
+    
+    if config.get_feature_flag("enable_email_notifications"):
+        tools.append(send_email)
+    
+    return tools
 
-property_specialist_tool = AgentTool(agent=property_specialist)
-
-calculator_specialist_tool = AgentTool(agent=calculator_specialist)
-
-coordination_specialist_tools = [
-    knowledge_specialist_tool,
-    property_specialist_tool,
-    calculator_specialist_tool,
-    AgentTool(agent=market_analyst),
-    analyze_conversation_context,  # Adds conversation analysis tool
-    memorize_conversation,         # Adds memory management tool
-    recall_conversation,           # Adds memory recall tool
-]
-
-# Add integration tools if features are enabled
-if config.get_feature_flag("enable_ai_avatar"):
-    coordination_specialist_tools.append(send_heygen_avatar_message)
-
-if config.get_feature_flag("enable_voice_synthesis"):
-    coordination_specialist_tools.append(generate_elevenlabs_audio)
-
-root_agent = Agent(
-    model=config.main_agent_model,
-    name="Philipp_ImmoAssist",
-    description="Personal AI consultant for German real estate investments with natural conversation and memory.",
-    instruction=ROOT_AGENT_PROMPT,
-    tools=coordination_specialist_tools,
-    # Add conversation management callbacks with state-based memory
+# Coordination Specialist Agent
+coordination_specialist = Agent(
+    model=config.chat_model,
+    name="CoordinationSpecialist",
+    instruction=COORDINATION_SPECIALIST_PROMPT,
+    tools=_build_coordination_tools(),
     before_agent_callback=combined_before_agent_callback,
-    before_model_callback=conversation_style_enhancer_callback,
-    before_tool_callback=before_tool_conversation_callback,
     after_agent_callback=after_agent_conversation_callback,
 )
 
-# === EXPORT FOR ADK WEB INTERFACE ===
-# This is the main entry point for the ADK web interface
-agent = root_agent  # For compatibility
+# Main Router Agent with sub-agents
+root_agent = Agent(
+    model=config.main_agent_model,
+    name="ImmoAssistInvestmentAdvisor",
+    instruction=ROOT_AGENT_PROMPT,
+    tools=[
+        AgentTool(agent=knowledge_specialist),
+        AgentTool(agent=property_specialist),
+        AgentTool(agent=calculator_specialist),
+        AgentTool(agent=market_analyst),
+        AgentTool(agent=legal_specialist),
+        AgentTool(agent=presentation_specialist),
+        AgentTool(agent=coordination_specialist),
+    ],
+)
 
-__all__ = ["root_agent", "agent"]
+# Note: initialize_conversation_memory_callback is used as a callback function
+# and should not be called directly here

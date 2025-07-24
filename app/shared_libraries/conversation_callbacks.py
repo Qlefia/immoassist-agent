@@ -56,13 +56,15 @@ def before_agent_conversation_callback(callback_context: InvocationContext) -> O
         
         # Extract user input from context
         user_input = _extract_user_input(callback_context)
+        logger.info(f"BEFORE_AGENT_CALLBACK: Extracted user input: '{user_input}'")
+        
         if not user_input:
+            logger.warning("BEFORE_AGENT_CALLBACK: No user input extracted, returning None")
             return None
         
-        # --- Язык всегда определяется по последнему сообщению пользователя ---
-        language = _analyze_language(user_input)
-        state[const.LANGUAGE_PREFERENCE] = language
-        state["last_detected_language"] = language
+        # --- Сохранить пользовательский ввод в state для памяти ---
+        state[const.CURRENT_USER_INPUT] = user_input
+        logger.info(f"BEFORE_AGENT: Saved user input: '{user_input}'")
 
         # --- Обработка явных запросов на перевод ---
         explicit_translation_request = False
@@ -88,39 +90,38 @@ def before_agent_conversation_callback(callback_context: InvocationContext) -> O
             elif "англ" in user_input_lower or "english" in user_input_lower:
                 translation_target = "English"
         state["explicit_translation_request"] = explicit_translation_request
+        # Note: Language detection now happens in style_enhancer_callback
         if explicit_translation_request and translation_target:
-            state[const.LANGUAGE_PREFERENCE] = translation_target
             state["translation_target"] = translation_target
         else:
             state["translation_target"] = None
 
-        # --- Остальной существующий код ---
-        # Analyze interaction type and conversation phase
-        interaction_type = _analyze_interaction_type(user_input, state)
-        conversation_phase = _determine_conversation_phase(interaction_type, state)
+        # --- Установка/сброс режима курса (course_mode) ---
+        course_mode_phrases = [
+            "помоги с курсом", "объясни из курса", "разберём презентацию", "разберем презентацию", "по курсу", "по презентации", "курс", "презентация", "lesson", "course", "presentation"
+        ]
+        course_mode_off_phrases = [
+            "теперь расскажи про рынок", "а что по налогам", "вне курса", "другая тема", "сменим тему", "расскажи про рынок", "расскажи про налоги", "расскажи про объекты", "про объекты", "про рынок", "про налоги", "market", "tax", "property", "object", "switch topic", "new topic"]
+        user_input_lower = user_input.lower()
+        if any(phrase in user_input_lower for phrase in course_mode_phrases):
+            state[const.COURSE_MODE] = True
+        elif any(phrase in user_input_lower for phrase in course_mode_off_phrases):
+            state[const.COURSE_MODE] = False
+
+        # Store simple message history for recall (detailed analysis will happen in style_enhancer)
+        message_history = state.get("message_history", [])
+        message_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "user_input": user_input,
+            "message_number": len(message_history) + 1
+        }
+        message_history.append(message_entry)
+        state["message_history"] = message_history
         
-        # Update counters and context
+        # Update basic counters
         state[const.INTERACTION_COUNT] = state.get(const.INTERACTION_COUNT, 0) + 1
-        state[const.CURRENT_USER_INPUT] = user_input
-        state[const.CURRENT_INTERACTION_TYPE] = interaction_type
-        state[const.CONVERSATION_PHASE] = conversation_phase
         
-        # Handle greetings
-        if interaction_type in [const.INTERACTION_GREETING, const.INTERACTION_REPEAT_GREETING]:
-            state[const.GREETING_COUNT] = state.get(const.GREETING_COUNT, 0) + 1
-        
-        # Extract and store discussed topics
-        topics = _extract_topics_from_input(user_input)
-        existing_topics = state.get(const.TOPICS_DISCUSSED, [])
-        for topic in topics:
-            if topic not in existing_topics:
-                existing_topics.append(topic)
-        state[const.TOPICS_DISCUSSED] = existing_topics
-        
-        # Store last interaction type
-        state[const.LAST_INTERACTION_TYPE] = interaction_type
-        
-        logger.debug(f"Conversation context updated: {interaction_type}, phase: {conversation_phase}, language: {language}, translation: {explicit_translation_request}")
+        logger.debug(f"User input saved for memory. Translation request: {explicit_translation_request}")
         
     except Exception as e:
         logger.error(f"Error in before_agent_conversation_callback: {e}")
@@ -191,10 +192,34 @@ def conversation_style_enhancer_callback(
     """
     try:
         state = callback_context.state
+        logger.info(f"STYLE ENHANCER CALLED: State type: {type(state)}")
         
-        # Check if state is initialized
+        # Initialize state if needed
         if const.CONVERSATION_INITIALIZED not in state:
-            return
+            _initialize_conversation_state(state)
+        
+        # CRITICAL: Extract and analyze language from current LLM request
+        current_user_input = None
+        if llm_request and llm_request.contents:
+            for content in llm_request.contents:
+                if content.parts:
+                    for part in content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            # Clean the text to get real user input
+                            raw_text = part.text.strip()
+                            current_user_input = _clean_user_input(raw_text)
+                            logger.info(f"STYLE ENHANCER: Extracted from LLM request: '{current_user_input}'")
+                            break
+                if current_user_input:
+                    break
+        
+        # Detect language from current input if available
+        detected_language = "English"  # default
+        if current_user_input:
+            detected_language = _analyze_language(current_user_input)
+            state[const.LANGUAGE_PREFERENCE] = detected_language
+            state[const.CURRENT_USER_INPUT] = current_user_input
+            logger.info(f"STYLE ENHANCER LANGUAGE DETECTION: Input='{current_user_input}' -> Detected='{detected_language}'")
         
         # Get current conversation context
         interaction_type = state.get(const.CURRENT_INTERACTION_TYPE, const.INTERACTION_ONGOING)
@@ -202,7 +227,8 @@ def conversation_style_enhancer_callback(
         greeting_count = state.get(const.GREETING_COUNT, 0)
         topics_discussed = state.get(const.TOPICS_DISCUSSED, [])
         user_preferences = state.get(const.USER_PREFERENCES, {})
-        language_preference = state.get(const.LANGUAGE_PREFERENCE, "German") # Default to German
+        language_preference = state.get(const.LANGUAGE_PREFERENCE, detected_language)
+        logger.info(f"STYLE ENHANCER: Final language: '{language_preference}'")
         explicit_translation_request = state.get("explicit_translation_request", False)
         translation_target = state.get("translation_target", None)
 
@@ -220,9 +246,10 @@ def conversation_style_enhancer_callback(
 
         # --- Добавить строгие языковые инструкции ---
         language_block = (
-            f"CRITICAL: ALWAYS reply in the language of the user's last message ('{enforced_language}'), unless the user explicitly requests a translation. "
-            f"If you use German terms in a Russian or English answer, ALWAYS provide a brief translation in parentheses right after the term. "
-            f"NEVER mix languages in one sentence, except for German terms with translation."
+            f"ABSOLUTE PRIORITY: The user wrote in {enforced_language} language. You MUST respond ONLY in {enforced_language}. "
+            f"FORBIDDEN: Responding in any other language than {enforced_language}. "
+            f"REQUIRED: Every single word in your response must be in {enforced_language}. "
+            f"If you mention German real estate terms (like Grundbuch, Sonder-AfA) in non-German responses, add translation in parentheses."
         )
         style_instructions = f"{language_block}\n\n{style_instructions}"
 
@@ -234,6 +261,7 @@ def conversation_style_enhancer_callback(
                 enhanced_text = f"{style_instructions}\n\n{original_text}"
                 first_content.parts[0].text = enhanced_text
         
+        logger.info(f"STYLE ENHANCER: Applied language={enforced_language}, instructions='{language_block[:100]}...'")
         logger.debug(f"Style instructions applied: {interaction_type}, phase: {conversation_phase}, language: {enforced_language}, translation: {explicit_translation_request}")
         
     except Exception as e:
@@ -283,7 +311,39 @@ def before_tool_conversation_callback(
 def _extract_user_input(callback_context: InvocationContext) -> Optional[str]:
     """Extracts user input from invocation context."""
     try:
-        # Extract from session events or context
+        logger.info(f"EXTRACT_INPUT: Callback context type: {type(callback_context)}")
+        
+        # Method 1: Check if there's a current message in invocation_args
+        if hasattr(callback_context, 'invocation_args'):
+            invocation_args = callback_context.invocation_args
+            logger.info(f"EXTRACT_INPUT: Found invocation_args: {invocation_args is not None}")
+            
+            if invocation_args and hasattr(invocation_args, 'messages'):
+                messages = invocation_args.messages
+                logger.info(f"EXTRACT_INPUT: Found {len(messages) if messages else 0} messages")
+                
+                if messages:
+                    # Get the last user message
+                    for i, message in enumerate(reversed(messages)):
+                        logger.info(f"EXTRACT_INPUT: Message {i} role: {getattr(message, 'role', 'no role')}")
+                        if hasattr(message, 'role') and message.role == 'user':
+                            if hasattr(message, 'parts') and message.parts:
+                                logger.info(f"EXTRACT_INPUT: Found {len(message.parts)} parts in user message")
+                                for j, part in enumerate(message.parts):
+                                    if hasattr(part, 'text') and part.text:
+                                        text = part.text.strip()
+                                        logger.info(f"EXTRACT_INPUT: Part {j} text: '{text[:100]}...'")
+                                        # Clean out language instructions that get prepended
+                                        cleaned = _clean_user_input(text)
+                                        logger.info(f"EXTRACT_INPUT: Returning cleaned: '{cleaned}'")
+                                        return cleaned
+        
+        # Method 2: Check stored in state
+        if hasattr(callback_context, 'state') and const.CURRENT_USER_INPUT in callback_context.state:
+            stored_input = callback_context.state[const.CURRENT_USER_INPUT]
+            return _clean_user_input(stored_input)
+        
+        # Method 3: Extract from session events or context
         if hasattr(callback_context, 'session') and callback_context.session:
             events = getattr(callback_context.session, 'events', [])
             if events:
@@ -292,17 +352,70 @@ def _extract_user_input(callback_context: InvocationContext) -> Optional[str]:
                     if hasattr(event, 'content') and event.content:
                         parts = getattr(event.content, 'parts', [])
                         if parts and hasattr(parts[0], 'text'):
-                            return parts[0].text
+                            text = parts[0].text
+                            return _clean_user_input(text)
                             
-        # Fallback: try to get from context attributes
+        # Method 4: Fallback to context attributes
         if hasattr(callback_context, 'user_input'):
-            return callback_context.user_input
+            text = callback_context.user_input
+            return _clean_user_input(text)
             
+        logger.warning("Could not extract user input from any source")
         return None
         
     except Exception as e:
         logger.error(f"Error extracting user input: {e}")
         return None
+
+
+def _clean_user_input(text: str) -> str:
+    """Cleans user input by removing language enforcement instructions."""
+    if not text:
+        return text
+    
+    logger.info(f"CLEAN_INPUT: Original text: '{text}'")
+    
+    # If the text looks like a simple question without language instructions, return as-is
+    if len(text) < 200 and not any(marker in text for marker in ["ABSOLUTE PRIORITY", "LANGUAGE ENFORCEMENT", "FORBIDDEN"]):
+        logger.info(f"CLEAN_INPUT: Simple text, returning as-is: '{text}'")
+        return text
+    
+    # Remove language enforcement blocks that get prepended to user messages
+    language_markers = [
+        "ABSOLUTE PRIORITY:",
+        "LANGUAGE ENFORCEMENT:",
+        "FORBIDDEN: Responding in any other language",
+        "REQUIRED: Every single word",
+        "Zero tolerance for other languages",
+        "Use warm, welcoming tone"
+    ]
+    
+    lines = text.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Skip empty lines
+        if not line:
+            continue
+            
+        # Check if this line contains language enforcement instructions
+        is_language_instruction = any(marker in line for marker in language_markers)
+        
+        if not is_language_instruction:
+            cleaned_lines.append(line)
+    
+    # Join the cleaned lines and return
+    result = ' '.join(cleaned_lines).strip()
+    
+    # If result is empty after cleaning, return original
+    if not result:
+        logger.warning(f"CLEAN_INPUT: Result empty, returning original: '{text}'")
+        return text
+        
+    logger.info(f"CLEAN_INPUT: Cleaned result: '{result}'")
+    return result
 
 
 def _initialize_conversation_state(state: Dict[str, Any]) -> None:
@@ -352,34 +465,91 @@ def _analyze_interaction_type(user_input: str, state: Dict[str, Any]) -> str:
 
 
 def _analyze_language(user_input: str) -> str:
-    """Analyzes the language of the user's input using an LLM."""
+    """Analyzes the language of the user's input using simple heuristics and LLM fallback."""
     try:
-        # Initialize Vertex AI and the ChatModel
-        vertexai.init()
-        chat_model = ChatModel.from_pretrained(config.chat_model)
-
-        prompt = conversation_prompts.ANALYZE_LANGUAGE_PROMPT.format(
-            user_input=user_input
-        )
+        # First try simple heuristic detection for speed and reliability
+        heuristic_result = _simple_language_heuristic(user_input)
+        logger.info(f"HEURISTIC LANGUAGE DETECTION: Input='{user_input}' -> Detected='{heuristic_result}'")
         
-        # Use the model to classify the language
-        response = chat_model.chat(prompt)
-        language_output = response.text.strip().capitalize()
+        # For German detection, use additional patterns
+        user_input_lower = user_input.lower()
+        german_patterns = ['ist', 'was', 'wie', 'der', 'die', 'das', 'und', 'mit', 'von', 'zu', 'auf', 'für', 'bei', 'nach', 'über']
         
-        # Directly return the detected language.
-        # Add a whitelist to prevent unexpected values.
-        supported_languages = ["Russian", "German", "English"]
-        if language_output in supported_languages:
-            return language_output
-        else:
-            # Fallback to German if detection is unclear or unsupported.
-            logger.warning(f"Unsupported language detected: '{language_output}'. Defaulting to German.")
+        if any(pattern in user_input_lower for pattern in german_patterns):
+            logger.info(f"GERMAN PATTERNS DETECTED in: '{user_input}'")
             return "German"
+        
+        # If heuristic is confident (Cyrillic/German chars), return it
+        if heuristic_result in ["Russian", "German"]:
+            return heuristic_result
+        
+        # For ambiguous cases, try LLM
+        try:
+            vertexai.init()
+            chat_model = ChatModel.from_pretrained(config.chat_model)
+
+            prompt = conversation_prompts.ANALYZE_LANGUAGE_PROMPT.format(
+                user_input=user_input
+            )
+            
+            response = chat_model.chat(prompt)
+            language_output = response.text.strip().capitalize()
+            
+            supported_languages = ["Russian", "German", "English"]
+            if language_output in supported_languages:
+                logger.info(f"LLM LANGUAGE DETECTION: Input='{user_input}' -> Detected='{language_output}'")
+                return language_output
+            else:
+                logger.warning(f"LLM returned unsupported language: {language_output}")
+                return "English"  # Default fallback
+                
+        except Exception as e:
+            logger.error(f"Error in LLM language detection: {e}")
+            return "English"  # Default fallback
 
     except Exception as e:
-        logger.error(f"Error analyzing language with LLM: {e}")
-        # Fallback to German if LLM fails.
+        logger.error(f"Error in language analysis: {e}")
+        return "English"  # Safe fallback
+
+
+def _simple_language_heuristic(text: str) -> str:
+    """Enhanced language detection using character patterns and common words."""
+    if not text:
+        return "English"  # Default to English for empty text
+    
+    text_lower = text.lower()
+    
+    # Check for Cyrillic characters (Russian)
+    cyrillic_chars = sum(1 for char in text if '\u0400' <= char <= '\u04FF')
+    if cyrillic_chars > 0:
+        return "Russian"
+    
+    # Check for German special characters
+    german_chars = sum(1 for char in text if char in 'äöüßÄÖÜ')
+    if german_chars > 0:
         return "German"
+    
+    # Check for common German words that are distinctive
+    german_words = ['ist', 'was', 'wie', 'der', 'die', 'das', 'und', 'oder', 'mit', 'von', 'für', 'auf', 'bei', 'nach', 'über', 'können', 'haben', 'sein', 'werden', 'auch', 'nicht', 'nur', 'noch', 'alle', 'diese', 'einem', 'einer', 'eines', 'unter', 'zwischen', 'während', 'durch', 'gegen', 'ohne', 'um', 'aber', 'doch', 'schon']
+    
+    # Check for Russian words (transliterated or common)
+    russian_words = ['что', 'как', 'где', 'когда', 'почему', 'кто', 'это', 'для', 'или', 'так', 'уже', 'если', 'все', 'его', 'ее', 'их', 'они', 'мы', 'вы', 'не', 'на', 'в', 'с', 'по', 'до', 'из', 'за', 'под', 'над', 'при', 'без', 'через', 'между']
+    
+    # Count word matches
+    words = text_lower.split()
+    german_word_count = sum(1 for word in words if word in german_words)
+    russian_word_count = sum(1 for word in words if word in russian_words)
+    
+    # If we find German words, it's likely German
+    if german_word_count > 0:
+        return "German"
+    
+    # If we find Russian words, it's likely Russian  
+    if russian_word_count > 0:
+        return "Russian"
+    
+    # Default to English for Latin alphabet without distinctive patterns
+    return "English"
 
 
 def _determine_conversation_phase(interaction_type: str, state: Dict[str, Any]) -> str:
@@ -432,8 +602,8 @@ def _build_style_instructions_from_state(
     """Builds style instructions based on conversation state."""
     instructions = []
     
-    # Force response language
-    instructions.append(f"CRITICAL: The user's language is {language_preference}. Your entire response MUST be in {language_preference}.")
+    # Force response language with absolute priority
+    instructions.append(f"LANGUAGE ENFORCEMENT: Respond ONLY in {language_preference}. Zero tolerance for other languages.")
     
     # Phase-specific instructions
     if conversation_phase == const.PHASE_OPENING:

@@ -43,7 +43,6 @@ class ExternalServicesConfig:
     """External service integration configuration."""
     
     elevenlabs_api_key: Optional[str] = None
-    heygen_api_key: Optional[str] = None
     email_service_endpoint: Optional[str] = None
     property_search_api_key: Optional[str] = None
 
@@ -53,7 +52,6 @@ class FeatureFlags:
     """Feature toggle configuration."""
     
     enable_voice_synthesis: bool = True
-    enable_ai_avatar: bool = True
     enable_email_notifications: bool = True
     enable_conversation_history: bool = True
     enable_rag_knowledge_base: bool = True
@@ -109,7 +107,6 @@ class ImmoAssistConfig:
         # External services configuration
         self.external_services = ExternalServicesConfig(
             elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY"),
-            heygen_api_key=os.getenv("HEYGEN_API_KEY"),
             email_service_endpoint=os.getenv("EMAIL_SERVICE_ENDPOINT"),
             property_search_api_key=os.getenv("PROPERTY_SEARCH_API_KEY")
         )
@@ -117,7 +114,6 @@ class ImmoAssistConfig:
         # Feature flags (environment variables override defaults)
         self.features = FeatureFlags(
             enable_voice_synthesis=self._get_bool_env("ENABLE_VOICE_SYNTHESIS", True),
-            enable_ai_avatar=self._get_bool_env("ENABLE_AI_AVATAR", True),
             enable_email_notifications=self._get_bool_env("ENABLE_EMAIL_NOTIFICATIONS", True),
             enable_conversation_history=self._get_bool_env("ENABLE_CONVERSATION_HISTORY", True),
             enable_rag_knowledge_base=self._get_bool_env("ENABLE_RAG_KNOWLEDGE_BASE", True),
@@ -145,13 +141,15 @@ class ImmoAssistConfig:
         self.api_port = int(os.getenv("API_PORT", "8080"))
         self.api_workers = int(os.getenv("API_WORKERS", "4"))
 
-        # Models - Restore for compatibility
-        self.main_agent_model = os.getenv("MAIN_AGENT_MODEL", "gemini-2.5-flash")
-        self.specialist_model = os.getenv("SPECIALIST_MODEL", "gemini-2.5-flash")
-        self.chat_model = os.getenv("CHAT_MODEL", "gemini-2.5-flash")
+        # Models
+        self.main_agent_model = os.getenv("MODEL_NAME")
+        self.specialist_model = os.getenv("SPECIALIST_MODEL")
+        self.chat_model = os.getenv("CHAT_MODEL")
 
         # RAG configuration
         self.rag_corpus = os.getenv("RAG_CORPUS")
+        self.legal_rag_corpus = os.getenv("LEGAL_RAG_CORPUS")
+        self.presentation_rag_corpus = os.getenv("PRESENTATION_RAG_CORPUS")
     
     def _validate_required_settings(self) -> None:
         """Validate that required configuration is present."""
@@ -161,13 +159,18 @@ class ImmoAssistConfig:
         if not self.google_cloud.project_id:
             required_settings.append("GOOGLE_CLOUD_PROJECT")
         
+        # Check model configuration
+        if not self.main_agent_model:
+            required_settings.append("MODEL_NAME")
+        if not self.specialist_model:
+            required_settings.append("SPECIALIST_MODEL")
+        if not self.chat_model:
+            required_settings.append("CHAT_MODEL")
+            
         # Check for production environment requirements
         if self.environment == "production":
             if not self.external_services.elevenlabs_api_key and self.features.enable_voice_synthesis:
                 logger.warning("ElevenLabs API key missing in production with voice synthesis enabled")
-            
-            if not self.external_services.heygen_api_key and self.features.enable_ai_avatar:
-                logger.warning("HeyGen API key missing in production with AI avatar enabled")
         
         if required_settings:
             missing_vars = ", ".join(required_settings)
@@ -284,7 +287,6 @@ class ImmoAssistConfig:
             },
             "features": {
                 "voice_synthesis": self.features.enable_voice_synthesis,
-                "ai_avatar": self.features.enable_ai_avatar,
                 "email_notifications": self.features.enable_email_notifications,
                 "conversation_history": self.features.enable_conversation_history,
                 "rag_knowledge_base": self.features.enable_rag_knowledge_base,

@@ -387,7 +387,7 @@ spec:
             - containerPort: 8000
           env:
             - name: GOOGLE_GENAI_USE_VERTEXAI
-              value: "True"
+              value: 'True'
 ```
 
 ## Performance Optimization
@@ -420,3 +420,71 @@ Apache License 2.0 - see `LICENSE` file for details.
 ## Support
 
 For technical support, integration questions, or feature requests, please refer to the project documentation or contact the development team.
+
+## Quick Start (Local Development)
+
+Follow these steps to spin up ImmoAssist locally in less than five minutes.
+
+```bash
+# 1. Clone and enter repository
+ git clone https://github.com/your-org/immoassist.git
+ cd immoassist
+
+# 2. Create and activate virtual environment
+ python -m venv .venv
+ source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 3. Install runtime dependencies
+ pip install -r requirements.txt
+
+# 4. Configure environment variables
+ cp environment.config.template .env
+ # Adjust .env as needed (MODEL_NAME, GOOGLE_CLOUD_PROJECT, etc.)
+
+# 5. Authenticate with Google Cloud (ADC)
+ gcloud auth application-default login
+
+# 6. Launch the agent (development mode)
+ python run_agent.py
+
+# 7. Open browser
+ http://localhost:8000/dev-ui/?app=app
+```
+
+> Tip: use `make dev` (see `Makefile`) for an automated version of these steps.
+
+## Contributing
+
+We welcome contributions! To keep the project tidy and maintainable, please follow the guidelines below.
+
+### Pull Requests
+
+1. **Fork the repository** and create your branch from `main`.
+2. **Write descriptive commits** (imperative mood, 72-char wrap).
+3. **Run the full test suite** (`pytest -v`) and ensure zero regressions.
+4. **Lint & format**: `ruff --fix` and `black .`.
+5. **Type-check**: `mypy app/`.
+6. **Update documentation** if you add or change public APIs.
+7. **Open a draft PR** early for visibility; mark ready once CI passes.
+
+### Branch Naming
+
+```
+<type>/<issue-id>-<short-description>
+# Examples
+feature/42-rag-pagination
+fix/128-email-timeout
+```
+
+### Commit Conventional Types
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only changes
+- `chore`: Other minor changes (build, CI, etc.)
+
+### Contributor License Agreement (CLA)
+
+By submitting a pull request, you agree to license your contribution under the Apache 2.0 License.
+
+Thank you for helping make ImmoAssist better!

@@ -7,7 +7,7 @@ instead of hardcoded keywords for better scalability and context understanding.
 
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from google.adk.tools import FunctionTool
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @FunctionTool
 def analyze_conversation_context(
     user_input: str, 
-    conversation_history: Optional[list] = None,
+    conversation_history: Optional[List[Dict[str, Any]]] = None,
     session_context: Optional[dict] = None
 ) -> Dict[str, Any]:
     """
@@ -398,4 +398,46 @@ def _get_fallback_analysis(user_input: str = "") -> Dict[str, Any]:
             "suggested_topics": [],
             "user_preferences": {}
         }
-    } 
+    }
+
+
+@FunctionTool
+def set_conversation_stage(
+    stage: str,
+    user_context: Optional[dict] = None
+) -> Dict[str, Any]:
+    """
+    Sets the current conversation stage for better context management.
+    
+    Args:
+        stage: Conversation stage to set (opening, exploration, decision, closing)
+        user_context: Optional user context for additional information
+        
+    Returns:
+        Status of the stage setting operation
+    """
+    try:
+        valid_stages = ["opening", "exploration", "decision", "closing"]
+        
+        if stage not in valid_stages:
+            return {
+                "status": "error",
+                "message": f"Invalid stage '{stage}'. Valid stages: {', '.join(valid_stages)}"
+            }
+        
+        # Log stage change
+        logger.info(f"Conversation stage set to: {stage}")
+        
+        return {
+            "status": "success",
+            "message": f"Conversation stage set to '{stage}'",
+            "stage": stage,
+            "context": user_context or {}
+        }
+        
+    except Exception as e:
+        logger.error(f"Error setting conversation stage: {e}")
+        return {
+            "status": "error",
+            "message": f"Error setting stage: {str(e)}"
+        } 

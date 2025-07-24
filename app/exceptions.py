@@ -240,18 +240,6 @@ class PropertyAPIError(ExternalAPIError):
         )
 
 
-class HeyGenAPIError(ExternalAPIError):
-    """Specific error for HeyGen avatar API failures."""
-
-    def __init__(self, message: str, **kwargs: Any) -> None:
-        super().__init__(
-            message=message,
-            api_name="heygen",
-            user_message="AI-Avatar Service temporär nicht verfügbar.",
-            **kwargs,
-        )
-
-
 class ElevenLabsAPIError(ExternalAPIError):
     """Specific error for ElevenLabs audio API failures."""
 

@@ -1,37 +1,34 @@
+# Copyright 2025 ImmoAssist
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
-ImmoAssist - AI-powered German real estate investment assistant.
+ImmoAssist - AI-powered German Real Estate Investment Assistant.
 
-This package provides intelligent consultation services for German real estate
-investments using advanced AI agents and multi-modal capabilities.
+A multi-agent system providing comprehensive support for real estate 
+investment decisions in the German market, including property search,
+financial analysis, legal guidance, and market insights.
 """
 
-from __future__ import annotations
+from .agent import root_agent
+from .config import config
 
-# Apply Windows Path compatibility patch for Google ADK
-import pathlib
-from pathlib import WindowsPath, PosixPath
-
-# Patch WindowsPath to support rstrip method for compatibility with Google ADK
-if not hasattr(WindowsPath, 'rstrip'):
-    def rstrip(self, chars=None):
-        """Adds rstrip method to WindowsPath for compatibility with Google ADK."""
-        return str(self).rstrip(chars)
-    WindowsPath.rstrip = rstrip
-
-# Patch PosixPath to support rstrip method for Linux/Cloud Run compatibility
-if not hasattr(PosixPath, 'rstrip'):
-    def rstrip(self, chars=None):
-        """Adds rstrip method to PosixPath for compatibility with Google ADK."""
-        return str(self).rstrip(chars)
-    PosixPath.rstrip = rstrip
-
-__version__ = "0.1.0"
+# Version info
+__version__ = "1.0.0"
 __author__ = "ImmoAssist Team"
-__email__ = "team@immoassist.com"
 
-# Public API exports
-__all__ = [
-    "__author__",
-    "__email__",
-    "__version__",
-]
+# Main agent export for Google ADK
+agent = root_agent
+
+# Public API
+__all__ = ["agent", "root_agent", "config"]

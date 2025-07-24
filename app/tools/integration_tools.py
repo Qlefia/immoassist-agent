@@ -1,220 +1,172 @@
 """
-Integration tools for ImmoAssist.
+Integration tools for external services.
 
-External service integrations including email notifications, 
-ElevenLabs audio generation, and HeyGen avatar messaging.
+Provides integration with third-party services including 
+ElevenLabs audio generation.
 """
 
-import logging
 import os
-from typing import Dict, Any
+import logging
+import asyncio
+from typing import Dict, Any, Optional, AsyncGenerator
 
-from google.adk.tools import FunctionTool
-
+# Configure logging
 logger = logging.getLogger(__name__)
 
-
-@FunctionTool
-def send_email_notification(
+def send_email(
     recipient_email: str,
     subject: str,
-    content: str,
-    email_type: str = "info"
+    body: str,
+    attachments: Optional[list] = None
 ) -> Dict[str, Any]:
     """
-    Sends email notifications to users with investment information, 
-    property recommendations, or appointment confirmations.
-
+    Send emails for property reports and investment analyses.
+    
     Args:
         recipient_email: Target email address
         subject: Email subject line
-        content: Email content body
-        email_type: Type of email (info, recommendation, appointment, alert)
-
+        body: Email content (HTML supported)
+        attachments: Optional list of file paths to attach
+    
     Returns:
-        Operation status and delivery confirmation
+        Dictionary with send status and message ID
     """
-    try:
-        # Email service integration placeholder
-        logger.info(f"Sending email: {email_type} to {recipient_email}")
-        logger.debug(f"Subject: {subject}")
-        logger.debug(f"Content preview: {content[:100]}...")
-
-        # TODO: Replace with actual email service integration
-        # email_service = get_email_service()
-        # result = email_service.send_email(recipient_email, subject, content)
-        
-        return {
-            "status": "sent",
-            "message": f"Email notification sent to {recipient_email}",
-            "email_type": email_type,
-            "timestamp": "2024-01-01T00:00:00Z"  # Placeholder
-        }
-        
-    except Exception as e:
-        logger.error(f"Error sending email notification: {e}")
+    # Email service integration placeholder
+    # In production, this would integrate with SendGrid, AWS SES, or similar
+    
+    # Validate email format
+    import re
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, recipient_email):
         return {
             "status": "error",
-            "message": f"Failed to send email: {str(e)}"
+            "message": "Invalid email address format"
         }
+    
+    # Check for email service configuration
+    email_service_endpoint = os.getenv("EMAIL_SERVICE_ENDPOINT")
+    if not email_service_endpoint:
+        logger.warning("Email service not configured, simulating send")
+        return {
+            "status": "simulated",
+            "message": "Email service not configured. In production, this would send an email.",
+            "details": {
+                "to": recipient_email,
+                "subject": subject,
+                "has_attachments": bool(attachments)
+            }
+        }
+    
+    # TODO: Implement actual email sending logic
+    # This would typically involve:
+    # 1. Connecting to email service API
+    # 2. Formatting the email with templates
+    # 3. Handling attachments
+    # 4. Sending and tracking delivery
+    
+    return {
+        "status": "success",
+        "message": f"Email sent to {recipient_email}",
+        "message_id": f"msg_{hash(recipient_email + subject) % 100000}"
+    }
 
 
-@FunctionTool
-def generate_elevenlabs_audio(
+def generate_audio_elevenlabs(
     text: str,
-    voice_id: str = "default",
-    output_format: str = "mp3"
+    voice_id: str = "EXAVITQu4vr4xnSDxMaL",  # Default to professional German voice
+    model_id: str = "eleven_multilingual_v2",
+    language_code: str = "de",
+    output_format: str = "mp3_44100_128"
 ) -> Dict[str, Any]:
     """
-    Generates audio content using ElevenLabs API for property descriptions,
-    investment analysis, or personalized messages.
-
+    Generate natural voice audio using ElevenLabs AI.
+    
     Args:
-        text: Text content to convert to audio
-        voice_id: ElevenLabs voice identifier (default: professional German voice)
-        output_format: Audio format (mp3, wav)
-
+        text: Text to convert to speech
+        voice_id: ElevenLabs voice identifier
+        model_id: Model to use for generation
+        language_code: Language code (de, en, etc.)
+        output_format: Audio output format
+    
     Returns:
-        Audio generation result with file URL or error details
+        Dictionary with audio URL and metadata
     """
+    # ElevenLabs API integration
     try:
-        # ElevenLabs API integration placeholder
-        logger.info(f"Generating audio: {len(text)} characters")
-        logger.debug(f"Voice ID: {voice_id}, Format: {output_format}")
-        
         api_key = os.getenv("ELEVENLABS_API_KEY")
         if not api_key:
+            logger.warning("ElevenLabs API key not configured")
             return {
                 "status": "error",
                 "message": "ElevenLabs API key not configured"
             }
-
+        
         # TODO: Replace with actual ElevenLabs API call
-        # import elevenlabs
-        # audio = elevenlabs.generate(
+        # from elevenlabs import ElevenLabs
+        # client = ElevenLabs(api_key=api_key)
+        # audio = client.generate(
         #     text=text,
         #     voice=voice_id,
-        #     model="eleven_multilingual_v2"
+        #     model=model_id
         # )
         
+        # Simulated response for development
         return {
-            "status": "generated",
-            "message": "Audio content generated successfully",
-            "audio_url": "https://example.com/audio/placeholder.mp3",  # Placeholder
-            "duration_seconds": len(text) // 10,  # Rough estimate
+            "status": "success",
+            "audio_url": f"https://api.elevenlabs.io/v1/audio/{hash(text) % 100000}.mp3",
+            "duration_seconds": len(text) * 0.1,  # Rough estimate
             "voice_id": voice_id,
-            "format": output_format
+            "language": language_code
         }
         
     except Exception as e:
-        logger.error(f"Error generating audio: {e}")
+        logger.error(f"ElevenLabs generation failed: {str(e)}")
         return {
             "status": "error",
             "message": f"Audio generation failed: {str(e)}"
         }
 
 
-@FunctionTool
-def send_heygen_avatar_message(
-    message: str,
-    avatar_id: str = "professional_consultant",
-    language: str = "de"
-) -> Dict[str, Any]:
+async def generate_audio_stream_elevenlabs(
+    text: str,
+    voice_id: str = "EXAVITQu4vr4xnSDxMaL",
+    model_id: str = "eleven_turbo_v2",  # Optimized for streaming
+    language_code: str = "de"
+) -> AsyncGenerator[bytes, None]:
     """
-    Sends personalized video messages using HeyGen AI avatars
-    for property presentations or investment consultations.
-
+    Stream audio generation for real-time playback.
+    
     Args:
-        message: Message content for avatar to deliver
-        avatar_id: HeyGen avatar identifier (professional_consultant, friendly_advisor)
-        language: Message language (de, en, ru)
-
-    Returns:
-        Video generation status and access details
+        text: Text to convert to speech
+        voice_id: ElevenLabs voice identifier
+        model_id: Model optimized for streaming
+        language_code: Language code
+    
+    Yields:
+        Audio data chunks for streaming playback
     """
-    try:
-        # HeyGen API integration placeholder
-        logger.info(f"Creating avatar message: {len(message)} characters")
-        logger.debug(f"Avatar: {avatar_id}, Language: {language}")
-        
-        api_key = os.getenv("HEYGEN_API_KEY")
-        if not api_key:
-            return {
-                "status": "error", 
-                "message": "HeyGen API key not configured"
-            }
-        
-        # TODO: Replace with actual HeyGen API call
-        # import heygen
-        # video = heygen.create_video(
-        #     text=message,
-        #     avatar_id=avatar_id,
-        #     language=language
-        # )
-        
-        return {
-            "status": "created",
-            "message": "Avatar video message created successfully",
-            "video_url": "https://example.com/video/placeholder.mp4",  # Placeholder
-            "duration_seconds": len(message) // 8,  # Rough estimate
-            "avatar_id": avatar_id,
-            "language": language
-        }
-        
-    except Exception as e:
-        logger.error(f"Error creating avatar message: {e}")
-        return {
-            "status": "error",
-            "message": f"Avatar message creation failed: {str(e)}"
-        }
+    # This would integrate with ElevenLabs streaming API
+    # For now, yield empty chunks to maintain interface
+    
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        logger.error("ElevenLabs API key not configured for streaming")
+        return
+    
+    # TODO: Implement actual streaming
+    # async with elevenlabs.stream(text=text, voice=voice_id) as stream:
+    #     async for chunk in stream:
+    #         yield chunk
+    
+    # Placeholder implementation
+    for i in range(10):
+        await asyncio.sleep(0.1)
+        yield b"audio_chunk_" + str(i).encode()
 
 
-@FunctionTool
-def create_appointment_link(
-    consultant_name: str,
-    time_slots: list,
-    meeting_type: str = "consultation",
-    duration_minutes: int = 60
-) -> Dict[str, Any]:
-    """
-    Creates appointment booking links for property consultations
-    or investment planning sessions.
-
-    Args:
-        consultant_name: Name of the consulting specialist
-        time_slots: Available time slots for booking
-        meeting_type: Type of meeting (consultation, viewing, analysis)
-        duration_minutes: Meeting duration in minutes
-
-    Returns:
-        Booking link and appointment details
-    """
-    try:
-        # Calendar service integration placeholder
-        logger.info(f"Creating appointment link: {meeting_type} with {consultant_name}")
-        logger.debug(f"Slots: {len(time_slots)}, Duration: {duration_minutes}min")
-        
-        # TODO: Replace with actual calendar service integration
-        # calendar_service = get_calendar_service()
-        # booking_link = calendar_service.create_booking_link(
-        #     consultant=consultant_name,
-        #     slots=time_slots,
-        #     duration=duration_minutes
-        # )
-        
-        return {
-            "status": "created",
-            "message": "Appointment booking link created",
-            "booking_url": "https://calendar.example.com/book/consultation",  # Placeholder
-            "consultant": consultant_name,
-            "meeting_type": meeting_type,
-            "duration_minutes": duration_minutes,
-            "available_slots": time_slots
-        }
-        
-    except Exception as e:
-        logger.error(f"Error creating appointment link: {e}")
-        return {
-            "status": "error",
-            "message": f"Appointment link creation failed: {str(e)}"
-        }
+# Export only the functions we want to make available
+__all__ = [
+    "send_email",
+    "generate_audio_elevenlabs", 
+    "generate_audio_stream_elevenlabs"
+]
