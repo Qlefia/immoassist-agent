@@ -212,6 +212,35 @@ def recall_conversation(
         }
 
 
+# --- Wrapper aliases for automatic function calling ---
+
+@FunctionTool
+def recall(
+    category: str = "all",
+    specific_key: Optional[str] = None,
+    tool_context: ToolContext = None
+) -> Dict[str, Any]:
+    """Alias for recall_conversation to expose function name 'recall' for AFC."""
+    return recall_conversation.func(
+        category=category,
+        specific_key=specific_key,
+        tool_context=tool_context
+    )
+
+
+@FunctionTool
+def recall_get_nth_user_message(
+    message_number: int,
+    tool_context: ToolContext = None
+) -> Dict[str, Any]:
+    """Retrieve nth user message (1-based index) from conversation history."""
+    return recall_conversation.func(
+        category="message_history",
+        specific_key=str(message_number),
+        tool_context=tool_context
+    )
+
+
 def _initialize_conversation_state(state: Dict[str, Any]) -> None:
     """Initializes conversation state in ADK state storage."""
     if const.CONVERSATION_INITIALIZED not in state:

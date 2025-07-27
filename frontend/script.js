@@ -6,6 +6,9 @@ import { addMessage, showTypingIndicator } from './chatUI.js';
 import { sendTextMessage } from './agentClient.js';
 import { elements } from './domCache.js';
 import speechManager from './speechManager.js';
+import { renderChart } from './chartRenderer.js';
+// Удаляю строку import { renderChart } from './chartRenderer.js'; и любые другие import/export
+// Остальной код не меняется, renderChart вызывается как window.renderChart или просто renderChart
 
 document.addEventListener('DOMContentLoaded', () => {
     const { chatMessages, chatInput, sendButton, micButton, voiceChatButton, languageToggle, currentLang } = elements;
@@ -68,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (raw) {
                 aiMessageElement.innerHTML = convertMarkdownToHtml(raw);
                 renderMathFormulas(aiMessageElement);
+                
+                // НЕ добавляем график здесь, так как это вызывается во время загрузки
+                
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         };
@@ -85,6 +91,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (updateTimer) clearTimeout(updateTimer);
             updateUI();
 
+            // Финальная проверка графика после завершения потока
+            const chartData = aiMessageElement.getAttribute('data-chart');
+            if (chartData) {
+                // Удаляем старый график, если есть
+                const existingChart = aiMessageElement.querySelector('.chart-container');
+                if (existingChart) {
+                    existingChart.remove();
+                }
+                
+                // Создаём новый контейнер для графика
+                try {
+                    const chart = JSON.parse(chartData);
+                    const chartContainer = document.createElement('div');
+                    chartContainer.className = 'chart-container';
+                    chartContainer.style.marginTop = '16px';
+                    chartContainer.style.marginBottom = '16px';
+                    aiMessageElement.appendChild(chartContainer);
+                    
+                    // Небольшая задержка для корректной инициализации DOM
+                    setTimeout(() => {
+                        renderChart(chartContainer, chart);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 100);
+                } catch (error) {
+                    console.error('Error rendering chart:', error);
+                }
+            }
+
             if (aiMessageElement.pendingSources?.length) {
                 displayRagSources(aiMessageElement.pendingSources, aiMessageElement);
             }
@@ -94,12 +128,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let pendingChart = null;
+
     // Event data processing (moved from window scope)
     function processEventData(jsonData, messageElement, isFirstResponse) {
         try {
             const parsed = JSON.parse(jsonData);
 
-            // Extract text from the agent's response
+            // Сохраняем график в атрибуте элемента, чтобы добавить после текста
+            if (parsed.content?.parts) {
+                for (const part of parsed.content.parts) {
+                    if (part.functionResponse?.response?.type === 'chart') {
+                        // Сохраняем данные графика в data-атрибуте
+                        messageElement.setAttribute('data-chart', JSON.stringify(part.functionResponse.response));
+                    }
+                }
+            }
+
+            // Обрабатываем текст
             if (parsed.content && parsed.content.parts) {
                 const textParts = parsed.content.parts
                     .filter(part => part.text)
@@ -341,19 +387,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (micButton) {
-        micButton.addEventListener('click', async () => {
-            const state = speechManager.getState();
-            if (state.isRecognitionActive) {
-                speechManager.stopMicrophone();
-                micButton.classList.remove('active');
-            } else {
-                const success = await speechManager.startMicrophone();
-                if (success) {
-                    micButton.classList.add('active');
-                }
-            }
-        });
-    }
+         micButton.addEventListener('click', async () => {
+             const state = speechManager.getState();
+             if (state.isRecognitionActive) {
+                 speechManager.stopMicrophone();
+             } else {
+                 const success = await speechManager.startMicrophone();
+             }
+         });
+     }
 
     if (voiceChatButton) {
         voiceChatButton.addEventListener('click', async () => {
@@ -385,7 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const speechInitialized = speechManager.init(
                 { appName, userId, sessionId }, 
                 setMessageInInput, 
-                voiceChatButton
+                voiceChatButton,
+                micButton
             );
 
             if (!speechInitialized) {

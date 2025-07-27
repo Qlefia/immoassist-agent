@@ -1,264 +1,250 @@
-# ImmoAssist: AI-Powered German Real Estate Investment Advisor
+# ImmoAssist: AI-Powered German Real Estate Investment Platform
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Framework](https://img.shields.io/badge/Google_ADK-1.5+-green.svg)](https://google.github.io/adk-docs/)
+[![Google ADK](https://img.shields.io/badge/Google_ADK-1.5+-green.svg)](https://google.github.io/adk-docs/)
+[![Gemini 2.5](https://img.shields.io/badge/Gemini-2.5_Flash-orange.svg)](https://ai.google.dev/gemini-api)
 
-Enterprise-grade multi-agent AI system designed for professional real estate investment consulting in Germany. Built on Google's Agent Development Kit (ADK), this system provides expert analysis, property search, financial calculations, and knowledge retrieval through specialized AI agents.
+Professional multi-agent AI system for German real estate investment consulting. Built on Google's Agent Development Kit (ADK) with specialized domain experts, advanced data visualization, and comprehensive RAG-powered knowledge base.
 
 ## System Architecture
 
-ImmoAssist implements a sophisticated multi-agent architecture with specialized domain experts:
+ImmoAssist implements a sophisticated multi-agent orchestration with specialized domain experts and advanced visualization capabilities:
 
 ```mermaid
-graph TD
-    subgraph "User Interface Layer"
-        UI[ADK Web Interface]
-        API[RESTful API]
+graph TB
+    subgraph "Frontend Layer"
+        UI[Web Interface]
+        Chart[Chart.js Visualization Engine]
+        Voice[Voice Interface]
     end
 
     subgraph "Core Agent System"
-        Root["Philipp (Root Agent)<br/>Coordination & Conversation Management"]
+        Root["Philipp (Root Agent)<br/>• Conversation Management<br/>• Agent Orchestration<br/>• Data Visualization Coordinator"]
 
         subgraph "Specialist Agents"
-            Knowledge["Knowledge Specialist<br/>• Legal & Regulatory Expertise<br/>• RAG-Powered Responses<br/>• Source Attribution"]
-            Property["Property Specialist<br/>• Property Search & Analysis<br/>• Market Evaluation<br/>• Investment Criteria"]
-            Calculator["Calculator Specialist<br/>• Financial Calculations<br/>• ROI Analysis<br/>• Tax Optimization"]
+            Knowledge["Knowledge Specialist<br/>• RAG-Powered Responses<br/>• Document Attribution<br/>• Legal & Regulatory Expertise"]
+            Property["Property Specialist<br/>• Property Search & Analysis<br/>• Market Evaluation<br/>• Investment Criteria Assessment"]
+            Calculator["Calculator Specialist<br/>• Financial Calculations<br/>• ROI Analysis<br/>• German Tax Optimization"]
             Market["Market Analyst<br/>• Market Trends Analysis<br/>• Regional Insights<br/>• Investment Strategy"]
+            Legal["Legal Specialist<br/>• German Real Estate Law<br/>• Tax Regulations<br/>• Compliance Guidance"]
+            Presentation["Presentation Specialist<br/>• Course Content Expert<br/>• Educational Materials<br/>• Learning Support"]
+            Coordination["Coordination Specialist<br/>• Multi-Agent Orchestration<br/>• Cross-Domain Analysis<br/>• Complex Query Resolution"]
+        end
+
+        subgraph "Visualization Tools"
+            ChartTool["create_chart()<br/>• Line Charts<br/>• Bar Charts<br/>• Pie Charts<br/>• Dynamic Data Visualization"]
         end
     end
 
     subgraph "Data & Integration Layer"
-        Search["Vertex AI Search<br/>(Discovery Engine)"]
-        Memory["State-Based Memory<br/>Session Management"]
-        Integration["External APIs<br/>• HeyGen Avatar<br/>• ElevenLabs Voice"]
+        RAG["Vertex AI Search RAG<br/>• Knowledge Base<br/>• Legal Documents<br/>• Presentation Content"]
+        Memory["Conversation Memory<br/>• Session Management<br/>• Context Persistence"]
+        External["External Integrations<br/>• ElevenLabs TTS<br/>• Email Services<br/>• Property APIs"]
     end
 
     UI --> Root
-    API --> Root
+    Chart --> UI
+    Voice --> UI
     Root --> Knowledge
     Root --> Property
     Root --> Calculator
     Root --> Market
-    Knowledge --> Search
+    Root --> Legal
+    Root --> Presentation
+    Root --> Coordination
+    Root --> ChartTool
+    ChartTool --> Chart
+    Knowledge --> RAG
+    Legal --> RAG
+    Presentation --> RAG
     Root --> Memory
-    Root --> Integration
+    Coordination --> External
 ```
 
 ## Technology Stack
 
-- **Core Framework**: Google Agent Development Kit (ADK) 1.5+
-- **Programming Language**: Python 3.11+
-- **AI Models**: Google Gemini 2.5 Flash/Pro (configurable via environment)
-- **Search & RAG**: Google Cloud Vertex AI Search (Discovery Engine)
-- **Web Framework**: FastAPI (via ADK)
-- **Data Validation**: Pydantic 2.10+
-- **Async Runtime**: Uvicorn
-- **Configuration**: python-dotenv
-- **Retrieval**: llama-index 0.11+
-- **Authentication**: Google Cloud Application Default Credentials
+**Core Framework**
+
+- Google Agent Development Kit (ADK) 1.5+
+- Python 3.11+ with async/await architecture
+- FastAPI web framework (via ADK)
+
+**AI & ML**
+
+- Google Gemini 2.5 Flash/Pro models
+- Vertex AI Search (Discovery Engine) for RAG
+- Multi-agent conversation orchestration
+
+**Data Visualization**
+
+- Chart.js 4.4+ for dynamic chart rendering
+- Server-side chart data generation
+- Real-time data visualization pipeline
+
+**Infrastructure**
+
+- Google Cloud Platform native
+- Vertex AI for model hosting
+- Cloud Run for containerized deployment
+
+## Advanced Features
+
+### Data Visualization System
+
+ImmoAssist includes a sophisticated data visualization engine that automatically generates charts and graphs:
+
+**Chart Types Supported:**
+
+- Line charts for trend analysis (yield progression, market trends)
+- Bar charts for comparative analysis (city comparisons, cost breakdowns)
+- Pie charts for distribution analysis (expense allocation, investment portfolio)
+
+**Visualization Workflow:**
+
+1. Agent analyzes user query for visualization requirements
+2. `create_chart()` tool generates structured chart data
+3. Frontend Chart.js renderer creates interactive visualizations
+4. Real-time chart updates during conversation
+
+**Example Usage:**
+
+```python
+# Agent automatically detects visualization needs
+create_chart(
+    chart_type="line",
+    data=[{"year": 2024, "yield": 3.5}, {"year": 2025, "yield": 3.7}],
+    title="5-Year Yield Projection",
+    x_label="Year",
+    y_label="Yield (%)"
+)
+```
+
+### Multi-Agent Orchestration
+
+**Root Agent (Philipp):**
+
+- Primary conversation coordinator
+- Intelligent query routing to specialists
+- Response synthesis and visualization coordination
+- Multi-language support (German, English, Russian)
+
+**Specialist Agents:**
+
+- **Knowledge Specialist**: RAG-powered general knowledge retrieval
+- **Property Specialist**: Property search and market analysis
+- **Calculator Specialist**: Financial calculations and investment modeling
+- **Market Analyst**: Trend analysis and strategic insights
+- **Legal Specialist**: German real estate law expertise
+- **Presentation Specialist**: Educational content and course materials
+- **Coordination Specialist**: Complex multi-domain query resolution
+
+### RAG-Powered Knowledge Base
+
+**Multiple Knowledge Sources:**
+
+- General real estate knowledge corpus
+- German legal documents and regulations
+- Educational presentation materials
+- Market data and analysis reports
+
+**Advanced RAG Features:**
+
+- Source attribution and citation
+- Multi-language document processing
+- Context-aware knowledge retrieval
+- Real-time knowledge base updates
 
 ## Project Structure
 
 ```
 immoassist/
-├── app/                          # Core application package
+├── app/                          # Core application
 │   ├── agent.py                  # Multi-agent system definition
-│   ├── config.py                 # Environment configuration management
-│   ├── models/                   # Pydantic data models
-│   │   ├── output_schemas.py     # Tool output schemas
-│   │   ├── property.py           # Property domain models
+│   ├── config.py                 # Configuration management
+│   ├── models/                   # Data models
 │   │   ├── financial.py          # Financial calculation models
-│   │   └── user.py               # User interaction models
-│   ├── prompts/                  # Agent prompt definitions
+│   │   ├── property.py           # Property domain models
+│   │   └── output_schemas.py     # Tool output schemas
+│   ├── prompts/                  # Agent instructions
 │   │   ├── root_agent.py         # Main coordinator prompts
-│   │   ├── knowledge_specialist.py # RAG specialist prompts
-│   │   ├── property_specialist.py  # Property search prompts
 │   │   ├── calculator_specialist.py # Financial analysis prompts
-│   │   └── market_analyst.py     # Market analysis prompts
-│   ├── tools/                    # Agent tool implementations
-│   │   ├── knowledge_tools.py    # RAG search tools
+│   │   ├── knowledge_specialist.py  # RAG specialist prompts
+│   │   ├── legal_specialist.py   # Legal expertise prompts
+│   │   └── presentation_specialist.py # Course content prompts
+│   ├── tools/                    # Agent capabilities
+│   │   ├── chart_tools.py        # Data visualization tools
+│   │   ├── knowledge_tools.py    # RAG search implementations
 │   │   ├── property_tools.py     # Property search & analysis
-│   │   ├── conversation_tools.py # Conversation analysis
-│   │   ├── memory_tools.py       # Session memory management
-│   │   ├── integration_tools.py  # External API integrations
-│   │   └── vertex_search.py      # Vertex AI Search client
-│   ├── services/                 # Business logic services
-│   │   └── session_service.py    # User session management
-│   └── shared_libraries/         # Shared components
-│       ├── conversation_callbacks.py # ADK conversation callbacks
-│       └── conversation_constants.py # State management constants
-├── tests/                        # Test suite
-│   └── test_conversation_flow.py # Conversation flow testing
-├── run_agent.py                  # Application entry point
-├── requirements.txt              # Production dependencies
-├── requirements-dev.txt          # Development dependencies
-├── pyproject.toml               # Project configuration & tools
-├── Dockerfile                   # Container deployment
-├── environment.config.template  # Environment configuration template
-├── INTEGRATION_PATTERNS.md     # Integration documentation
-├── SECURITY.md                 # Security guidelines
-└── CONVERSATION_IMPROVEMENTS.md # System enhancement documentation
+│   │   ├── conversation_tools.py # Context analysis
+│   │   ├── memory_tools.py       # Session management
+│   │   └── integration_tools.py  # External API integrations
+│   ├── services/                 # Business logic
+│   └── shared_libraries/         # Common utilities
+├── frontend/                     # Web interface
+│   ├── index.html               # Main application UI
+│   ├── script.js                # Core application logic
+│   ├── chartRenderer.js         # Chart.js visualization engine
+│   ├── style.css                # Application styling
+│   └── chart.min.js             # Chart.js library
+├── tests/                       # Test suite
+├── run_agent.py                 # Application entry point
+├── requirements.txt             # Production dependencies
+└── Dockerfile                   # Container configuration
 ```
 
-## Core Components
-
-### Multi-Agent System
-
-**Root Agent (Philipp_ImmoAssist)**
-
-- Central coordinator for all user interactions
-- Manages conversation flow and context
-- Delegates specialized queries to domain experts
-- Provides unified responses with memory persistence
-
-**Knowledge Specialist**
-
-- Domain: German real estate law, regulations, ImmoAssist processes
-- Tools: RAG-powered knowledge search with source attribution
-- Output: Structured responses with document citations
-
-**Property Specialist**
-
-- Domain: Property search, evaluation, market analysis
-- Tools: Property database search, detailed property analysis
-- Focus: A+ energy efficiency properties, new construction benefits
-
-**Calculator Specialist**
-
-- Domain: Financial calculations, ROI analysis, investment optimization
-- Tools: Comprehensive financial modeling with German tax considerations
-- Output: Investment projections, tax benefit analysis, cash flow modeling
-
-**Market Analyst**
-
-- Domain: Market trends analysis, regional insights, investment strategy
-- Tools: Market data analysis and trend identification
-- Output: Strategic market intelligence and timing recommendations
-
-### Data Models
-
-**Property Models**
-
-- `PropertySearchItem`: Individual property representation
-- `PropertySearchResult`: Search results with metadata
-- `PropertyDetails`: Comprehensive property information
-
-**Financial Models**
-
-- `InvestmentCalculationResult`: Complete financial analysis
-- `GermanTaxBenefits`: Tax optimization calculations
-- `InvestmentRecommendation`: Strategic investment advice
-
-**Knowledge Models**
-
-- `RagResponse`: Knowledge base responses with source attribution
-- `RagSource`: Document metadata and citations
-
-### Tool System
-
-**Knowledge Tools**
-
-- `search_knowledge_rag`: Intelligent knowledge base search using Vertex AI Search
-- RAG-powered responses with source attribution
-- Multi-language support for German and English content
-
-**Property Tools**
-
-- `search_properties`: Advanced property filtering and search
-- `get_property_details`: Comprehensive property analysis
-- `calculate_investment_return`: Financial modeling and ROI calculation
-
-**Conversation Tools**
-
-- `analyze_conversation_context`: Conversation flow analysis
-- `memorize_conversation`: Session memory management
-- `recall_conversation`: Context retrieval and personalization
-
-**Integration Tools**
-
-- `send_heygen_avatar_message`: Avatar-based interactions (optional)
-- `generate_elevenlabs_audio`: Voice synthesis (optional)
-
-### Configuration Management
-
-Environment-driven configuration with support for:
-
-- **Model Selection**: Configurable Gemini models for different agent types
-- **Google Cloud**: Project ID, location, and service configuration
-- **RAG System**: Vertex AI Search engine configuration
-- **Feature Flags**: Optional integrations (HeyGen, ElevenLabs)
-- **Security**: Authentication and access control settings
-
-### Memory & Session Management
-
-State-based conversation memory using ADK's `callback_context.state`:
-
-- **Persistent Memory**: User preferences and conversation history
-- **Context Awareness**: Dynamic conversation adaptation
-- **Session Management**: Multi-user session handling
-- **Conversation Callbacks**: Advanced conversation flow control
-
-## Getting Started
+## Installation & Setup
 
 ### Prerequisites
 
-- Python 3.11 or higher
-- Google Cloud Project with enabled APIs:
-  - Vertex AI API
-  - Vertex AI Search (Discovery Engine) API
-- Google Cloud CLI configured with Application Default Credentials
-- Service account with appropriate IAM permissions
+**Required:**
 
-### Required Google Cloud APIs
+- Python 3.11+
+- Google Cloud Project with enabled APIs
+- Google Cloud CLI with Application Default Credentials
+
+**Google Cloud APIs:**
 
 ```bash
 gcloud services enable aiplatform.googleapis.com
 gcloud services enable discoveryengine.googleapis.com
 ```
 
-### Installation
+### Quick Start
 
-1. **Clone the repository**:
+```bash
+# 1. Clone repository
+git clone https://github.com/your-org/immoassist.git
+cd immoassist
 
-   ```bash
-   git clone https://github.com/your-org/immoassist.git
-   cd immoassist
-   ```
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-2. **Create virtual environment**:
+# 3. Install dependencies
+pip install -r requirements.txt
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   ```
+# 4. Configure authentication
+gcloud auth application-default login
 
-3. **Install dependencies**:
+# 5. Set up environment
+cp environment.config.template .env
+# Edit .env with your configuration
 
-   ```bash
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt  # For development
-   ```
+# 6. Run application
+python run_agent.py
 
-4. **Configure authentication**:
-
-   ```bash
-   gcloud auth application-default login
-   ```
-
-5. **Set up environment**:
-   ```bash
-   cp environment.config.template .env
-   # Edit .env with your specific configuration
-   ```
+# 7. Access interface
+# http://localhost:8000
+```
 
 ### Environment Configuration
 
-Key environment variables (see `environment.config.template` for complete list):
+Key environment variables:
 
 ```bash
 # Google Cloud Configuration
 GOOGLE_GENAI_USE_VERTEXAI=True
+GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=europe-west3
 
 # Model Configuration
@@ -268,94 +254,98 @@ CHAT_MODEL=gemini-2.5-flash
 
 # RAG Configuration
 RAG_CORPUS=projects/your-project/locations/your-location/ragCorpora/your-corpus
+LEGAL_RAG_CORPUS=projects/your-project/locations/your-location/ragCorpora/legal-corpus
+PRESENTATION_RAG_CORPUS=projects/your-project/locations/your-location/ragCorpora/presentation-corpus
+
+# Feature Flags
+ENABLE_VOICE_SYNTHESIS=true
+ENABLE_EMAIL_NOTIFICATIONS=true
+ENABLE_CONVERSATION_HISTORY=true
 
 # Server Configuration
 PORT=8000
-DEBUG=True
-
-# Feature Flags
-ENABLE_AI_AVATAR=false
-ENABLE_VOICE_SYNTHESIS=false
+DEBUG=false
 ```
 
-### Running the System
+## Core Features
 
-**Development Mode**:
+### Financial Analysis
+
+- German tax optimization calculations (Sonder-AfA, linear depreciation)
+- ROI analysis with comprehensive cost modeling
+- Multi-year investment projections
+- Cash flow analysis and yield calculations
+
+### Property Intelligence
+
+- Advanced property search with investment criteria
+- Market analysis and trend identification
+- Location assessment and neighborhood analysis
+- Energy efficiency evaluation (A+ properties focus)
+
+### Legal Expertise
+
+- German real estate law guidance (EStG, BGB, MaBV)
+- Tax regulation compliance
+- Contract and regulatory analysis
+- Investment structure optimization
+
+### Educational Support
+
+- Interactive course content delivery
+- Step-by-step investment guidance
+- Personalized learning paths
+- Progress tracking and assessment
+
+### Data Visualization
+
+- Automatic chart generation based on conversation context
+- Interactive financial projections
+- Market trend visualizations
+- Investment comparison charts
+
+## API & Integration
+
+### ADK Web Interface
+
+Direct browser-based interaction with full agent capabilities.
+
+### RESTful API
+
+```bash
+# Start conversation
+POST /apps/app/users/{user_id}/sessions/{session_id}
+
+# Send message
+POST /run_sse
+Content-Type: application/json
+{
+  "message": "Show me yield projections for Leipzig properties"
+}
+```
+
+### Webhook Integration
+
+Event-driven integrations for external systems and workflows.
+
+## Deployment
+
+### Local Development
 
 ```bash
 python run_agent.py
 ```
 
-**Production Mode**:
+### Docker Container
 
 ```bash
-# Using Docker
 docker build -t immoassist .
 docker run -p 8000:8000 --env-file .env immoassist
-
-# Direct deployment
-PORT=8000 python run_agent.py
 ```
 
-Access the web interface at `http://localhost:8000`
-
-### Development
-
-**Run tests**:
+### Google Cloud Run
 
 ```bash
-pytest tests/ -v
-```
-
-**Code formatting**:
-
-```bash
-black app/ tests/
-ruff check app/ tests/
-```
-
-**Type checking**:
-
-```bash
-mypy app/
-```
-
-## Security Considerations
-
-- **Authentication**: Uses Google Cloud Application Default Credentials
-- **Authorization**: IAM-based access control for Google Cloud services
-- **Data Protection**: All data processed within Google Cloud infrastructure
-- **Network Security**: VPC Service Controls support for production deployments
-- **Audit Logging**: Cloud Audit Logs integration for compliance
-
-Refer to `SECURITY.md` for comprehensive security guidelines.
-
-## Integration Patterns
-
-ImmoAssist supports multiple integration patterns:
-
-**ADK Web Interface**: Direct browser-based interaction
-**RESTful API**: Programmatic access for web applications
-**Webhook Integration**: Event-driven integrations
-**Batch Processing**: Large-scale data processing capabilities
-
-Refer to `INTEGRATION_PATTERNS.md` for detailed integration documentation.
-
-## Testing
-
-Comprehensive test suite covering:
-
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: Multi-agent interaction testing
-- **Conversation Flow Tests**: End-to-end conversation scenarios
-- **Performance Tests**: Load and stress testing
-
-## Deployment
-
-### Cloud Run Deployment
-
-```bash
-# Build and deploy to Google Cloud Run
 gcloud run deploy immoassist \
   --source . \
   --region europe-west3 \
@@ -363,7 +353,7 @@ gcloud run deploy immoassist \
   --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=True
 ```
 
-### Kubernetes Deployment
+### Kubernetes
 
 ```yaml
 apiVersion: apps/v1
@@ -390,101 +380,111 @@ spec:
               value: 'True'
 ```
 
-## Performance Optimization
+## Testing
 
-- **Async Processing**: Fully asynchronous architecture
-- **Connection Pooling**: Optimized HTTP client configuration
-- **Caching**: Intelligent response caching for knowledge base queries
-- **Load Balancing**: Horizontal scaling support
-- **Resource Management**: Memory-efficient conversation state management
+```bash
+# Run test suite
+pytest tests/ -v
 
-## Monitoring and Observability
+# Code quality
+black app/ tests/
+ruff check app/ tests/
+mypy app/
+```
 
-- **Structured Logging**: JSON-formatted logs for aggregation
-- **Performance Metrics**: Agent response time and accuracy tracking
-- **Error Tracking**: Comprehensive error handling and reporting
-- **Health Checks**: Built-in health monitoring endpoints
+## Performance & Scalability
+
+**Architecture Benefits:**
+
+- Async/await throughout for high concurrency
+- Agent-based load distribution
+- Intelligent query routing and caching
+- Horizontal scaling support
+
+**Optimization Features:**
+
+- Connection pooling for external APIs
+- Response caching for knowledge base queries
+- Efficient memory management for conversations
+- Load-balanced agent processing
+
+## Security
+
+**Authentication & Authorization:**
+
+- Google Cloud IAM integration
+- Application Default Credentials
+- Service account based access control
+
+**Data Protection:**
+
+- All processing within Google Cloud infrastructure
+- VPC Service Controls support
+- Audit logging integration
+- Secure conversation state management
+
+## Monitoring & Observability
+
+**Logging:**
+
+- Structured JSON logging
+- Agent performance tracking
+- Error tracking and alerting
+- Conversation flow analysis
+
+**Metrics:**
+
+- Response time monitoring
+- Agent utilization tracking
+- Knowledge base query performance
+- User engagement analytics
+
+## Development Roadmap
+
+| Component                   | Status           | Notes                                        |
+| --------------------------- | ---------------- | -------------------------------------------- |
+| Core Multi-Agent System     | Production Ready | 8 specialized agents with full orchestration |
+| Data Visualization Engine   | Production Ready | Chart.js integration with dynamic generation |
+| RAG Knowledge Base          | Production Ready | Multi-corpus Vertex AI Search integration    |
+| Financial Calculations      | Production Ready | German tax optimization and ROI analysis     |
+| Property Search Integration | In Development   | Real estate API integration in progress      |
+| Voice Synthesis             | Beta             | ElevenLabs TTS integration available         |
+| Email Notifications         | Beta             | SMTP service integration                     |
+| Mobile Application          | Planned          | React Native implementation planned          |
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes with appropriate tests
-4. Ensure code passes all quality checks
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit changes (`git commit -am 'Add your feature'`)
+4. Push to branch (`git push origin feature/your-feature`)
+5. Create Pull Request
 
-## License
+**Development Guidelines:**
 
-Apache License 2.0 - see `LICENSE` file for details.
+- Follow PEP 8 style guidelines
+- Add comprehensive tests for new features
+- Update documentation for API changes
+- Ensure all tests pass before submitting PR
 
-## Support
+## Support & Documentation
 
-For technical support, integration questions, or feature requests, please refer to the project documentation or contact the development team.
+For technical support, integration questions, or feature requests:
 
-## Quick Start (Local Development)
+**Technical Documentation:**
 
-Follow these steps to spin up ImmoAssist locally in less than five minutes.
+- API Reference: `/docs` endpoint when running
+- Agent Architecture: See `app/agent.py`
+- Configuration Guide: See `app/config.py`
 
-```bash
-# 1. Clone and enter repository
- git clone https://github.com/your-org/immoassist.git
- cd immoassist
+**Integration Support:**
 
-# 2. Create and activate virtual environment
- python -m venv .venv
- source .venv/bin/activate  # Windows: .venv\Scripts\activate
+- WebHook integration patterns
+- Custom agent development
+- Enterprise deployment guidance
 
-# 3. Install runtime dependencies
- pip install -r requirements.txt
+## Commercial License
 
-# 4. Configure environment variables
- cp environment.config.template .env
- # Adjust .env as needed (MODEL_NAME, GOOGLE_CLOUD_PROJECT, etc.)
+This is a commercial software product. All rights reserved. Unauthorized reproduction, distribution, or modification is prohibited.
 
-# 5. Authenticate with Google Cloud (ADC)
- gcloud auth application-default login
-
-# 6. Launch the agent (development mode)
- python run_agent.py
-
-# 7. Open browser
- http://localhost:8000/dev-ui/?app=app
-```
-
-> Tip: use `make dev` (see `Makefile`) for an automated version of these steps.
-
-## Contributing
-
-We welcome contributions! To keep the project tidy and maintainable, please follow the guidelines below.
-
-### Pull Requests
-
-1. **Fork the repository** and create your branch from `main`.
-2. **Write descriptive commits** (imperative mood, 72-char wrap).
-3. **Run the full test suite** (`pytest -v`) and ensure zero regressions.
-4. **Lint & format**: `ruff --fix` and `black .`.
-5. **Type-check**: `mypy app/`.
-6. **Update documentation** if you add or change public APIs.
-7. **Open a draft PR** early for visibility; mark ready once CI passes.
-
-### Branch Naming
-
-```
-<type>/<issue-id>-<short-description>
-# Examples
-feature/42-rag-pagination
-fix/128-email-timeout
-```
-
-### Commit Conventional Types
-
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation only changes
-- `chore`: Other minor changes (build, CI, etc.)
-
-### Contributor License Agreement (CLA)
-
-By submitting a pull request, you agree to license your contribution under the Apache 2.0 License.
-
-Thank you for helping make ImmoAssist better!
+For licensing inquiries and commercial use, please contact the development team.

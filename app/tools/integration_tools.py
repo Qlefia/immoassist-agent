@@ -65,8 +65,8 @@ def send_email(
     # 4. Sending and tracking delivery
     
     return {
-        "status": "success",
-        "message": f"Email sent to {recipient_email}",
+        "status": "not_implemented",
+        "message": f"Email sending not implemented for {recipient_email}",
         "message_id": f"msg_{hash(recipient_email + subject) % 100000}"
     }
 
@@ -112,7 +112,7 @@ def generate_audio_elevenlabs(
         
         # Simulated response for development
         return {
-            "status": "success",
+            "status": "not_implemented",
             "audio_url": f"https://api.elevenlabs.io/v1/audio/{hash(text) % 100000}.mp3",
             "duration_seconds": len(text) * 0.1,  # Rough estimate
             "voice_id": voice_id,

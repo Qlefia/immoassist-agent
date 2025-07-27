@@ -15,9 +15,9 @@
 """ImmoAssist Multi-Agent System for German Real Estate Investment Consulting."""
 
 import logging
-from typing import List, Optional
+from typing import List
 
-from google.adk.agents import Agent, SequentialAgent
+from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 
 from .config import config
@@ -49,6 +49,7 @@ from .tools.memory_tools import (
 )
 from .tools.legal_tools import search_legal_rag
 from .tools.presentation_tools import search_presentation_rag
+from .tools.chart_tools import create_chart
 from .shared_libraries.conversation_callbacks import (
     combined_before_agent_callback,
     after_agent_conversation_callback,
@@ -96,7 +97,7 @@ legal_specialist = Agent(
     model=config.specialist_model,
     name="LegalSpecialist",
     instruction=LEGAL_SPECIALIST_PROMPT,
-            tools=[search_legal_rag],
+    tools=[search_legal_rag],
 )
 
 # Presentation Specialist Agent
@@ -104,7 +105,7 @@ presentation_specialist = Agent(
     model=config.specialist_model,
     name="PresentationSpecialist",
     instruction=PRESENTATION_SPECIALIST_PROMPT,
-            tools=[search_presentation_rag],
+    tools=[search_presentation_rag],
 )
 
 # Build Coordination Specialist tools dynamically
@@ -140,6 +141,8 @@ root_agent = Agent(
     model=config.main_agent_model,
     name="ImmoAssistInvestmentAdvisor",
     instruction=ROOT_AGENT_PROMPT,
+    before_agent_callback=combined_before_agent_callback,
+    after_agent_callback=after_agent_conversation_callback,
     tools=[
         AgentTool(agent=knowledge_specialist),
         AgentTool(agent=property_specialist),
@@ -148,6 +151,7 @@ root_agent = Agent(
         AgentTool(agent=legal_specialist),
         AgentTool(agent=presentation_specialist),
         AgentTool(agent=coordination_specialist),
+        create_chart,  # Добавляем функцию построения графиков
     ],
 )
 

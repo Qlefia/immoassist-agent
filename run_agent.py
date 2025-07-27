@@ -66,14 +66,14 @@ os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west3")
 class TTSRequest(BaseModel):
     """Text-to-speech request model."""
     text: str
-    voice_id: str = "JBFqnCBsd6RMkjVDRZzb"  # George - multilingual voice
+    voice_id: str = "pNInz6obpgDQGcFmaJgB"  # Adam - multilingual voice
     model_id: str = "eleven_flash_v2_5"  # Optimized for low latency
 
 
 class VoiceChatRequest(BaseModel):
     """Voice chat request model."""
     text: str
-    voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
+    voice_id: str = "pNInz6obpgDQGcFmaJgB"
     app_name: str
     user_id: str
     session_id: str

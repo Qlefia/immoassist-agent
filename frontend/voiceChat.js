@@ -102,7 +102,7 @@ export async function generateAndPlayVoiceChatTTS(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: text,
-        voice_id: 'JBFqnCBsd6RMkjVDRZzb', // George - multilingual voice
+        voice_id: 'pNInz6obpgDQGcFmaJgB', // Adam - multilingual voice
         model_id: 'eleven_flash_v2_5', // Flash model for minimal latency
       }),
     });

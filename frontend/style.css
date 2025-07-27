@@ -1112,3 +1112,16 @@ body {
 } 
 
 /* Удалены стили для .formula и .message ul li > .formula */ 
+.chart-container {
+  width: 100%;
+  max-width: 420px;
+  min-height: 260px;
+  margin: 12px auto 4px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 12px 8px 8px 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} 

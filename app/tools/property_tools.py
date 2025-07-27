@@ -117,8 +117,8 @@ def search_properties(
         # )
         
         return {
-            "status": "success",
-            "message": "Property search completed",
+            "status": "not_implemented",
+            "message": "Property search functionality is not yet implemented.",
             "properties": [],
             "total_found": 0
         }
@@ -170,9 +170,9 @@ def get_property_details(
         # details = client.get_property(property_id)
         
         return {
-            "status": "success",
+            "status": "not_implemented",
+            "message": "Property details functionality is not yet implemented.",
             "property_id": property_id,
-            "message": "Property details retrieved",
             "details": {}
         }
         

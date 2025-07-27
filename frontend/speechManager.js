@@ -30,6 +30,7 @@ class SpeechManager {
     this.sessionInfo = null;
     this.onMessageSend = null;
     this.voiceChatButton = null;
+    this.micButton = null;
   }
 
   /**
@@ -38,10 +39,11 @@ class SpeechManager {
    * @param {Function} onMessageSend - Callback for sending messages
    * @param {HTMLElement} voiceChatButton - Voice chat button element
    */
-  init(sessionInfo, onMessageSend, voiceChatButton) {
+  init(sessionInfo, onMessageSend, voiceChatButton, micButton) {
     this.sessionInfo = sessionInfo;
     this.onMessageSend = onMessageSend;
     this.voiceChatButton = voiceChatButton;
+    this.micButton = micButton;
 
     if (!this._checkSpeechSupport()) return false;
 
@@ -77,6 +79,8 @@ class SpeechManager {
     this.recognition.onstart = () => this._handleMicrophoneStart();
     this.recognition.onend = () => this._handleMicrophoneEnd();
     this.recognition.onspeechend = () => this._handleMicrophoneSpeechEnd();
+    this.recognition.onsoundend = () => this._handleMicrophoneSoundEnd();
+    this.recognition.onnomatch = () => this._handleMicrophoneNoMatch();
     this.recognition.onerror = (event) => this._handleMicrophoneError(event);
 
     console.log('Microphone recognition initialized, language:', this.recognition.lang);
@@ -154,6 +158,7 @@ class SpeechManager {
       
       console.log('Starting microphone recognition...');
       this.recognition.start();
+      this._updateMicButtonState(true);
       return true;
     } catch (error) {
       console.error('Failed to start microphone recognition:', error);
@@ -169,6 +174,7 @@ class SpeechManager {
     
     console.log('Stopping microphone recognition...');
     this.recognition.stop();
+    this._updateMicButtonState(false);
   }
 
   /**
@@ -237,6 +243,19 @@ class SpeechManager {
   _updateVoiceChatButtonState(state) {
     if (this.voiceChatButton) {
       updateVoiceChatButtonState(this.voiceChatButton, state);
+    }
+  }
+
+  /**
+   * Update microphone button state.
+   */
+  _updateMicButtonState(active) {
+    if (this.micButton) {
+      if (active) {
+        this.micButton.classList.add('active');
+      } else {
+        this.micButton.classList.remove('active');
+      }
     }
   }
 
@@ -327,6 +346,7 @@ class SpeechManager {
       }
       this.currentRecognitionBubble = null;
     }
+    this._updateMicButtonState(false);
     console.log('Microphone recognition ended');
   }
 
@@ -337,9 +357,24 @@ class SpeechManager {
     }
   }
 
+  _handleMicrophoneSoundEnd() {
+    console.log('Sound ended, stopping microphone recognition');
+    if (this.isRecognitionActive) {
+      this.recognition.stop();
+    }
+  }
+
+  _handleMicrophoneNoMatch() {
+    console.log('No match, stopping microphone recognition');
+    if (this.isRecognitionActive) {
+      this.recognition.stop();
+    }
+  }
+
   _handleMicrophoneError(event) {
     console.error('Microphone recognition error:', event.error);
     this.isRecognitionActive = false;
+    this._updateMicButtonState(false);
     if (this.currentRecognitionBubble) {
       removeRecognitionBubble(this.currentRecognitionBubble);
       this.currentRecognitionBubble = null;
