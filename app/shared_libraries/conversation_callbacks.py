@@ -26,7 +26,7 @@ from . import conversation_constants as const
 logger = logging.getLogger(__name__)
 
 
-def combined_before_agent_callback(callback_context: InvocationContext) -> Optional[str]:
+def combined_before_agent_callback(callback_context) -> Optional[str]:
     """
     Composite callback combining memory initialization and conversation analysis.
     Called before each agent invocation to ensure proper context setup.
@@ -46,7 +46,7 @@ def combined_before_agent_callback(callback_context: InvocationContext) -> Optio
         return None
 
 
-def before_agent_conversation_callback(callback_context: InvocationContext) -> Optional[str]:
+def before_agent_conversation_callback(callback_context) -> Optional[str]:
     """
     Callback executed before each agent invocation.
     Analyzes conversation context and updates state for persistent memory.
@@ -129,7 +129,7 @@ def before_agent_conversation_callback(callback_context: InvocationContext) -> O
 
 
 def after_agent_conversation_callback(
-    callback_context: InvocationContext
+    callback_context
 ) -> None:
     """
     Callback executed after agent response generation.
@@ -175,6 +175,14 @@ def after_agent_conversation_callback(
         # Limit history to last 20 interactions
         if len(state[const.CONVERSATION_HISTORY]) > 20:
             state[const.CONVERSATION_HISTORY] = state[const.CONVERSATION_HISTORY][-20:]
+        
+        # Update message_history with agent response
+        message_history = state.get("message_history", [])
+        if message_history and agent_response:
+            # Update the last entry with agent response
+            if message_history[-1].get("agent_response") is None:
+                message_history[-1]["agent_response"] = agent_response
+            state["message_history"] = message_history
         
         logger.debug(f"Conversation interaction recorded: {interaction_type}")
         
@@ -251,7 +259,14 @@ def conversation_style_enhancer_callback(
             f"REQUIRED: Every single word in your response must be in {enforced_language}. "
             f"If you mention German real estate terms (like Grundbuch, Sonder-AfA) in non-German responses, add translation in parentheses."
         )
-        style_instructions = f"{language_block}\n\n{style_instructions}"
+        
+        # --- Добавить datetime напоминание если обнаружено ---
+        datetime_reminder = state.get('datetime_reminder', '')
+        if datetime_reminder:
+            style_instructions = f"{language_block}\n\n{datetime_reminder}\n\n{style_instructions}"
+            logger.info("STYLE ENHANCER: Added datetime trigger reminder to instructions")
+        else:
+            style_instructions = f"{language_block}\n\n{style_instructions}"
 
         # Add instructions to LLM request
         if style_instructions and llm_request.contents:
@@ -308,12 +323,104 @@ def before_tool_conversation_callback(
     return None
 
 
-def _extract_user_input(callback_context: InvocationContext) -> Optional[str]:
+def _extract_user_input(callback_context) -> Optional[str]:
     """Extracts user input from invocation context."""
     try:
         logger.info(f"EXTRACT_INPUT: Callback context type: {type(callback_context)}")
+        logger.info(f"EXTRACT_INPUT: Available attributes: {dir(callback_context)}")
         
-        # Method 1: Check if there's a current message in invocation_args
+        # Method 0: Check for user_content attribute (ADK CallbackContext)
+        if hasattr(callback_context, 'user_content'):
+            user_content = callback_context.user_content
+            logger.info(f"EXTRACT_INPUT: user_content exists: {user_content is not None}")
+            logger.info(f"EXTRACT_INPUT: user_content type: {type(user_content)}")
+            logger.info(f"EXTRACT_INPUT: user_content value: {repr(user_content)}")
+            
+            if user_content is not None:
+                # user_content может быть строкой или содержать parts
+                if isinstance(user_content, str):
+                    text = user_content.strip()
+                    logger.info(f"EXTRACT_INPUT: user_content string: '{text[:100]}...'")
+                    if text:  # Проверяем что строка не пустая
+                        cleaned = _clean_user_input(text)
+                        logger.info(f"EXTRACT_INPUT: Returning cleaned from user_content: '{cleaned}'")
+                        return cleaned
+                elif hasattr(user_content, 'parts') and user_content.parts:
+                    logger.info(f"EXTRACT_INPUT: user_content has {len(user_content.parts)} parts")
+                    for i, part in enumerate(user_content.parts):
+                        if hasattr(part, 'text') and part.text:
+                            text = part.text.strip()
+                            logger.info(f"EXTRACT_INPUT: user_content part {i} text: '{text[:100]}...'")
+                            if text:  # Проверяем что текст не пустой
+                                cleaned = _clean_user_input(text)
+                                logger.info(f"EXTRACT_INPUT: Returning cleaned from user_content parts: '{cleaned}'")
+                                return cleaned
+                else:
+                    # Проверим все атрибуты user_content
+                    logger.info(f"EXTRACT_INPUT: user_content attributes: {dir(user_content) if hasattr(user_content, '__dict__') else 'no attributes'}")
+                    
+                    # Возможно это Content объект с parts или text напрямую
+                    if hasattr(user_content, 'text'):
+                        text = str(user_content.text).strip()
+                        logger.info(f"EXTRACT_INPUT: user_content.text: '{text[:100]}...'")
+                        if text:
+                            cleaned = _clean_user_input(text)
+                            logger.info(f"EXTRACT_INPUT: Returning cleaned from user_content.text: '{cleaned}'")
+                            return cleaned
+        
+        # Method 1: Check for request attribute (ADK CallbackContext)
+        if hasattr(callback_context, 'request'):
+            request = callback_context.request
+            logger.info(f"EXTRACT_INPUT: Found request attribute: {type(request)}")
+            
+            if hasattr(request, 'messages') and request.messages:
+                messages = request.messages
+                logger.info(f"EXTRACT_INPUT: Found {len(messages)} messages in request")
+                
+                # Get the last user message
+                for i, message in enumerate(reversed(messages)):
+                    logger.info(f"EXTRACT_INPUT: Message {i} role: {getattr(message, 'role', 'no role')}")
+                    if hasattr(message, 'role') and message.role == 'user':
+                        if hasattr(message, 'parts') and message.parts:
+                            logger.info(f"EXTRACT_INPUT: Found {len(message.parts)} parts in user message")
+                            for j, part in enumerate(message.parts):
+                                if hasattr(part, 'text') and part.text:
+                                    text = part.text.strip()
+                                    logger.info(f"EXTRACT_INPUT: Part {j} text: '{text[:100]}...'")
+                                    # Clean out language instructions that get prepended
+                                    cleaned = _clean_user_input(text)
+                                    logger.info(f"EXTRACT_INPUT: Returning cleaned: '{cleaned}'")
+                                    return cleaned
+        
+        # Method 2: Check _invocation_context (ADK internal)
+        if hasattr(callback_context, '_invocation_context') and callback_context._invocation_context:
+            invocation_context = callback_context._invocation_context
+            logger.info(f"EXTRACT_INPUT: Found _invocation_context: {type(invocation_context)}")
+            
+            if hasattr(invocation_context, 'invocation_args'):
+                invocation_args = invocation_context.invocation_args
+                logger.info(f"EXTRACT_INPUT: Found invocation_args in _invocation_context: {invocation_args is not None}")
+                
+                if invocation_args and hasattr(invocation_args, 'messages'):
+                    messages = invocation_args.messages
+                    logger.info(f"EXTRACT_INPUT: Found {len(messages) if messages else 0} messages in _invocation_context")
+                    
+                    if messages:
+                        # Get the last user message
+                        for i, message in enumerate(reversed(messages)):
+                            logger.info(f"EXTRACT_INPUT: _invocation_context Message {i} role: {getattr(message, 'role', 'no role')}")
+                            if hasattr(message, 'role') and message.role == 'user':
+                                if hasattr(message, 'parts') and message.parts:
+                                    logger.info(f"EXTRACT_INPUT: _invocation_context Found {len(message.parts)} parts in user message")
+                                    for j, part in enumerate(message.parts):
+                                        if hasattr(part, 'text') and part.text:
+                                            text = part.text.strip()
+                                            logger.info(f"EXTRACT_INPUT: _invocation_context Part {j} text: '{text[:100]}...'")
+                                            cleaned = _clean_user_input(text)
+                                            logger.info(f"EXTRACT_INPUT: Returning cleaned from _invocation_context: '{cleaned}'")
+                                            return cleaned
+        
+        # Method 3: Check if there's a current message in invocation_args
         if hasattr(callback_context, 'invocation_args'):
             invocation_args = callback_context.invocation_args
             logger.info(f"EXTRACT_INPUT: Found invocation_args: {invocation_args is not None}")
@@ -338,12 +445,12 @@ def _extract_user_input(callback_context: InvocationContext) -> Optional[str]:
                                         logger.info(f"EXTRACT_INPUT: Returning cleaned: '{cleaned}'")
                                         return cleaned
         
-        # Method 2: Check stored in state
+        # Method 4: Check stored in state
         if hasattr(callback_context, 'state') and const.CURRENT_USER_INPUT in callback_context.state:
             stored_input = callback_context.state[const.CURRENT_USER_INPUT]
             return _clean_user_input(stored_input)
         
-        # Method 3: Extract from session events or context
+        # Method 5: Extract from session events or context
         if hasattr(callback_context, 'session') and callback_context.session:
             events = getattr(callback_context.session, 'events', [])
             if events:
@@ -355,7 +462,7 @@ def _extract_user_input(callback_context: InvocationContext) -> Optional[str]:
                             text = parts[0].text
                             return _clean_user_input(text)
                             
-        # Method 4: Fallback to context attributes
+        # Method 6: Fallback to context attributes
         if hasattr(callback_context, 'user_input'):
             text = callback_context.user_input
             return _clean_user_input(text)
@@ -429,6 +536,7 @@ def _initialize_conversation_state(state: Dict[str, Any]) -> None:
         state[const.TOPICS_DISCUSSED] = []
         state[const.USER_PREFERENCES] = {}
         state[const.LAST_INTERACTION_TYPE] = const.INTERACTION_GREETING
+        state["message_history"] = []  # Добавляем инициализацию истории сообщений
         
         logger.info("Initialized conversation state")
 

@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2025 ImmoAssist
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+
 
 """
 ImmoAssist Agent Runner.
@@ -26,18 +15,21 @@ import sys
 import logging
 from pathlib import Path
 from typing import AsyncGenerator
+from datetime import datetime
 
 import uvicorn
-from dotenv import load_dotenv
 from google.adk.cli.fast_api import get_fast_api_app
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse, JSONResponse
 from pydantic import BaseModel
 import httpx
 
-# Load environment variables
-load_dotenv()
+# Import health checks and observability
+from app.health_checks import health_checker
+from app.observability import metrics_collector, track_user_interaction
+
+# Environment variables are loaded in app.config
 
 # Configure logging
 logging.basicConfig(
@@ -193,6 +185,97 @@ def create_app() -> FastAPI:
                 "Access-Control-Allow-Methods": "POST, OPTIONS",
                 "Access-Control-Allow-Headers": "*",
                 "Access-Control-Max-Age": "3600"
+            }
+        )
+    
+    # Add comprehensive health check endpoint
+    @app.get("/health")
+    async def health_check():
+        """Comprehensive health check for all system components."""
+        try:
+            health_status = await health_checker.check_all()
+            
+            # Return appropriate HTTP status based on health
+            if health_status["status"] == "unhealthy":
+                return JSONResponse(
+                    status_code=503,
+                    content=health_status
+                )
+            elif health_status["status"] == "degraded":
+                return JSONResponse(
+                    status_code=200,
+                    content=health_status
+                )
+            else:
+                return JSONResponse(
+                    status_code=200,
+                    content=health_status
+                )
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "timestamp": "unavailable"
+                }
+            )
+    
+    # Add metrics endpoint for monitoring
+    @app.get("/metrics")
+    async def get_metrics():
+        """Get application metrics for monitoring."""
+        try:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "metrics_summary": metrics_collector.get_metrics_summary(),
+                    "cloud_monitoring_format": metrics_collector.export_metrics_for_cloud_monitoring()
+                }
+            )
+        except Exception as e:
+            logger.error(f"Metrics endpoint failed: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={"error": str(e)}
+            )
+    
+    # Add readiness probe endpoint  
+    @app.get("/ready")
+    async def readiness_check():
+        """Simple readiness check for Kubernetes/Cloud Run."""
+        try:
+            # Quick check of essential services
+            vertex_ai_check = await health_checker.check_vertex_ai()
+            
+            if vertex_ai_check.status == "unhealthy":
+                return JSONResponse(
+                    status_code=503,
+                    content={"ready": False, "reason": vertex_ai_check.message}
+                )
+            
+            return JSONResponse(
+                status_code=200,
+                content={"ready": True, "timestamp": vertex_ai_check.timestamp}
+            )
+        except Exception as e:
+            logger.error(f"Readiness check failed: {e}")
+            return JSONResponse(
+                status_code=503,
+                content={"ready": False, "error": str(e)}
+            )
+    
+    # Add liveness probe endpoint
+    @app.get("/alive")
+    async def liveness_check():
+        """Simple liveness check for Kubernetes/Cloud Run."""
+        return JSONResponse(
+            status_code=200,
+            content={
+                "alive": True,
+                "timestamp": str(datetime.utcnow()),
+                "application": "immoassist"
             }
         )
     

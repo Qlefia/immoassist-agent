@@ -1,47 +1,51 @@
 """
-Conversation state management constants for ImmoAssist.
+Conversation state constants for ImmoAssist.
 
-Defines keys for storing conversation data in callback_context.state
-following ADK agent patterns for state management.
+These constants define the keys used in callback_context.state
+for managing conversation context, user preferences, and interaction tracking.
 """
 
-# Core conversation state keys
+# Session management constants
 CONVERSATION_INITIALIZED = "conversation_initialized"
-CONVERSATION_HISTORY = "conversation_history"
-GREETING_COUNT = "greeting_count"
-TOPICS_DISCUSSED = "topics_discussed"
-USER_PREFERENCES = "user_preferences"
-CONVERSATION_PHASE = "conversation_phase"
-LAST_INTERACTION_TYPE = "last_interaction_type"
 SESSION_START_TIME = "session_start_time"
-COURSE_MODE = "course_mode"
+SESSION_ACTIVE = "session_active"
+LAST_ACTIVITY = "last_activity"
 
-# Current interaction context
-CURRENT_USER_INPUT = "current_user_input"
-CURRENT_ANALYSIS = "current_analysis"
-CURRENT_INTERACTION_TYPE = "current_interaction_type"
-
-# Conversation analytics
+# Conversation state tracking
+GREETING_COUNT = "greeting_count"
 INTERACTION_COUNT = "interaction_count"
-LANGUAGE_PREFERENCE = "language_preference"
-COMMUNICATION_STYLE = "communication_style"
+CONVERSATION_PHASE = "conversation_phase"
+CURRENT_USER_INPUT = "current_user_input"
+LAST_INTERACTION_TYPE = "last_interaction_type"
+
+# Agent preference system
+PREFERRED_AGENT = "preferred_agent"
+AGENT_AUTO_MODE = "agent_auto_mode"
+
+# User preferences and memory
+USER_PREFERENCES = "user_preferences"
+TOPICS_DISCUSSED = "topics_discussed"
+CONVERSATION_HISTORY = "conversation_history"
 
 # Conversation phases
 PHASE_OPENING = "opening"
-PHASE_EXPLORATION = "exploration" 
+PHASE_EXPLORATION = "exploration"
 PHASE_DECISION = "decision"
-PHASE_CLOSING = "closing"
+PHASE_FOLLOW_UP = "follow_up"
 
 # Interaction types
 INTERACTION_GREETING = "greeting"
-INTERACTION_REPEAT_GREETING = "repeat_greeting"
-INTERACTION_ONGOING = "ongoing"
 INTERACTION_QUESTION = "question"
-INTERACTION_REPEAT_QUESTION = "repeat_question"
-INTERACTION_CLOSING = "closing"
+INTERACTION_CALCULATION = "calculation"
+INTERACTION_SEARCH = "search"
+INTERACTION_LEGAL = "legal"
 
-# Communication tone levels
-TONE_FORMAL = "formal"
-TONE_SEMI_FORMAL = "semi_formal"
-TONE_CASUAL = "casual"
-TONE_FRIENDLY = "friendly" 
+# Language and style tracking
+LANGUAGE_PREFERENCE = "language_preference"
+ENFORCED_LANGUAGE = "enforced_language"
+EXPLICIT_TRANSLATION_REQUEST = "explicit_translation_request"
+TRANSLATION_TARGET = "translation_target"
+
+# Course and presentation mode
+COURSE_MODE = "course_mode"
+PRESENTATION_CONTEXT = "presentation_context" 

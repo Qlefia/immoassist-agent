@@ -69,6 +69,14 @@ class SessionService:
             state["session_active"] = True
             state["last_activity"] = current_time
             
+            # Initialize agent preference system
+            state[const.PREFERRED_AGENT] = None
+            state[const.AGENT_AUTO_MODE] = True
+            
+            # Initialize course mode
+            state[const.COURSE_MODE] = False
+            state[const.PRESENTATION_CONTEXT] = None
+            
             logger.info(f"New session initialized: {session_id}")
             
             return {
@@ -93,47 +101,45 @@ class SessionService:
             callback_context: ADK callback context with state access
 
         Returns:
-            Complete session information including activity metrics
+            Session information with status and details
         """
         try:
             state = callback_context.state
             
             if const.CONVERSATION_INITIALIZED not in state:
                 return {
-                    "status": "not_found",
+                    "status": "no_session",
                     "message": "No active session found"
                 }
             
-            # Calculate session metrics
-            start_time_str = state.get(const.SESSION_START_TIME)
-            session_duration = self._calculate_session_duration(start_time_str)
+            # Calculate session duration
+            session_start = state.get(const.SESSION_START_TIME)
+            current_time = datetime.now()
             
-            # Gather conversation statistics
-            conversation_stats = {
-                "total_interactions": state.get(const.INTERACTION_COUNT, 0),
-                "greeting_count": state.get(const.GREETING_COUNT, 0),
-                "topics_discussed_count": len(state.get(const.TOPICS_DISCUSSED, [])),
-                "conversation_phase": state.get(const.CONVERSATION_PHASE, const.PHASE_OPENING),
-                "last_interaction": state.get(const.LAST_INTERACTION_TYPE, "none")
-            }
-            
-            # User preferences summary
-            user_preferences = state.get(const.USER_PREFERENCES, {})
-            preferences_summary = {
-                "preferences_set": len(user_preferences),
-                "has_budget_info": any("budget" in key.lower() for key in user_preferences.keys()),
-                "has_location_pref": any("location" in key.lower() for key in user_preferences.keys()),
-                "has_property_type_pref": any("type" in key.lower() for key in user_preferences.keys())
-            }
+            session_duration = "unknown"
+            if session_start:
+                try:
+                    start_dt = datetime.fromisoformat(session_start)
+                    duration = current_time - start_dt
+                    session_duration = str(duration).split('.')[0]  # Remove microseconds
+                except ValueError:
+                    logger.warning(f"Invalid session start time format: {session_start}")
             
             return {
                 "status": "active",
-                "session_id": state.get("session_id"),
-                "created_at": start_time_str,
-                "duration": session_duration,
-                "last_activity": state.get("last_activity"),
-                "conversation_stats": conversation_stats,
-                "preferences_summary": preferences_summary,
+                "session_id": state.get("session_id", "unknown"),
+                "created_at": session_start,
+                "session_duration": session_duration,
+                "greeting_count": state.get(const.GREETING_COUNT, 0),
+                "interaction_count": state.get(const.INTERACTION_COUNT, 0),  
+                "conversation_phase": state.get(const.CONVERSATION_PHASE, const.PHASE_OPENING),
+                "topics_discussed": len(state.get(const.TOPICS_DISCUSSED, [])),
+                "user_preferences": len(state.get(const.USER_PREFERENCES, {})),
+                "conversation_history": len(state.get(const.CONVERSATION_HISTORY, [])),
+                "last_interaction_type": state.get(const.LAST_INTERACTION_TYPE, "unknown"),
+                "preferred_agent": state.get(const.PREFERRED_AGENT),
+                "agent_auto_mode": state.get(const.AGENT_AUTO_MODE, True),
+                "course_mode": state.get(const.COURSE_MODE, False),
                 "session_active": state.get("session_active", True)
             }
             
@@ -207,34 +213,22 @@ class SessionService:
             if const.CONVERSATION_INITIALIZED not in state:
                 return {
                     "status": "no_session",
-                    "message": "No active session found",
+                    "message": "No active session for history retrieval",
                     "history": []
                 }
             
-            # Get conversation history
-            full_history = state.get(const.CONVERSATION_HISTORY, [])
+            history = state.get(const.CONVERSATION_HISTORY, [])
             
             # Apply limit if specified
-            if limit and len(full_history) > limit:
-                history = full_history[-limit:]  # Get most recent interactions
-                truncated = True
-            else:
-                history = full_history
-                truncated = False
-            
-            # Calculate history statistics
-            history_stats = {
-                "total_interactions": len(full_history),
-                "returned_interactions": len(history),
-                "truncated": truncated,
-                "oldest_interaction": history[0]["timestamp"] if history else None,
-                "newest_interaction": history[-1]["timestamp"] if history else None
-            }
+            if limit and limit > 0:
+                history = history[-limit:]  # Get last N interactions
             
             return {
                 "status": "success",
-                "history": history,
-                "stats": history_stats
+                "session_id": state.get("session_id", "unknown"),
+                "total_interactions": len(state.get(const.CONVERSATION_HISTORY, [])),
+                "returned_interactions": len(history),
+                "history": history
             }
             
         except Exception as e:
@@ -243,6 +237,116 @@ class SessionService:
                 "status": "error",
                 "message": f"History retrieval failed: {str(e)}",
                 "history": []
+            }
+
+    def set_preferred_agent(
+        self, 
+        callback_context: CallbackContext, 
+        agent_key: str
+    ) -> Dict[str, Any]:
+        """
+        Sets the preferred agent for the current session.
+
+        Args:
+            callback_context: ADK callback context with state access
+            agent_key: Key identifying the preferred agent
+
+        Returns:
+            Operation result with status
+        """
+        try:
+            state = callback_context.state
+            
+            if const.CONVERSATION_INITIALIZED not in state:
+                return {
+                    "status": "no_session",
+                    "message": "No active session to update"
+                }
+            
+            # Valid agent keys
+            valid_agents = {
+                "property_specialist",
+                "calculator_specialist", 
+                "knowledge_specialist",
+                "legal_specialist",
+                "market_analyst",
+                "presentation_specialist"
+            }
+            
+            if agent_key and agent_key not in valid_agents:
+                return {
+                    "status": "invalid_agent",
+                    "message": f"Invalid agent key: {agent_key}. Valid options: {', '.join(valid_agents)}"
+                }
+            
+            # Set preferred agent
+            state[const.PREFERRED_AGENT] = agent_key
+            state[const.AGENT_AUTO_MODE] = agent_key is None
+            
+            logger.info(f"Preferred agent updated: {agent_key}, auto_mode: {agent_key is None}")
+            
+            return {
+                "status": "updated",
+                "preferred_agent": agent_key,
+                "agent_auto_mode": agent_key is None,
+                "message": f"Preferred agent set to: {agent_key}" if agent_key else "Auto mode enabled"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error setting preferred agent: {e}")
+            return {
+                "status": "error",
+                "message": f"Failed to set preferred agent: {str(e)}"
+            }
+
+    def clear_session(self, callback_context: CallbackContext) -> Dict[str, Any]:
+        """
+        Clears the current session state (for testing or reset purposes).
+
+        Args:
+            callback_context: ADK callback context with state access
+
+        Returns:
+            Clear operation result
+        """
+        try:
+            state = callback_context.state
+            
+            # Clear all session data
+            keys_to_clear = [
+                const.CONVERSATION_INITIALIZED,
+                "session_id",
+                const.SESSION_START_TIME,
+                const.GREETING_COUNT,
+                const.INTERACTION_COUNT,
+                const.CONVERSATION_PHASE,
+                const.TOPICS_DISCUSSED,
+                const.USER_PREFERENCES,
+                const.CONVERSATION_HISTORY,
+                const.LAST_INTERACTION_TYPE,
+                const.PREFERRED_AGENT,
+                const.AGENT_AUTO_MODE,
+                const.COURSE_MODE,
+                const.PRESENTATION_CONTEXT,
+                "session_active",
+                "last_activity"
+            ]
+            
+            for key in keys_to_clear:
+                state.pop(key, None)
+            
+            logger.info("Session cleared successfully")
+            
+            return {
+                "status": "cleared",
+                "message": "Session state cleared successfully"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error clearing session: {e}")
+            return {
+                "status": "error", 
+                "message": f"Session clear failed: {str(e)}"
             }
     
     def save_conversation_interaction(

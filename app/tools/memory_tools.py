@@ -66,10 +66,9 @@ def memorize_conversation(
 
 @FunctionTool
 def recall_conversation(
-    category: str, 
-    specific_key: Optional[str] = None,
-    tool_context: ToolContext = None,
-    session_context: Optional[dict] = None
+    category: str,
+    tool_context: ToolContext,
+    specific_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Retrieves stored conversation information: discussion history, user preferences,
@@ -77,28 +76,26 @@ def recall_conversation(
     
     Args:
         category: Information category to retrieve (all, user_preferences, topics_discussed, conversation_summary, interaction_stats)
-        specific_key: Specific key to search for (optional)
         tool_context: ADK context with access to state
-        session_context: Alternative context dict (for compatibility)
+        specific_key: Specific key to search for (optional)
     Returns:
         Retrieved memory information with status
     """
     try:
-        if tool_context is not None:
-            state = tool_context.state
-        elif session_context is not None:
-            state = session_context
-        else:
-            return {
-                "status": "error",
-                "message": "No context provided for recall_conversation"
-            }
+        state = tool_context.state
+        logger.debug(f"RECALL_CONVERSATION: Checking state for memory data")
         
-        if const.CONVERSATION_INITIALIZED not in state:
+        # Check if conversation is initialized OR message history exists (fallback)
+        has_init_flag = const.CONVERSATION_INITIALIZED in state
+        message_history = state.get("message_history", [])
+        has_messages = len(message_history) > 0
+        
+        logger.debug(f"RECALL_CONVERSATION: has_init_flag={has_init_flag}, has_messages={has_messages}, total_messages={len(message_history)}")
+        
+        if not has_init_flag and not has_messages:
             return {
                 "status": "empty",
-                "message": "Conversation just started, memory is empty.",
-                "data": {}
+                "message": "Conversation just started, memory is empty."
             }
         
         if category == "all":
@@ -149,6 +146,34 @@ def recall_conversation(
                     "last_interaction": state.get(const.LAST_INTERACTION_TYPE, "none"),
                     "session_duration": _calculate_session_duration(state)
                 }
+            }
+        
+        elif category == "message_history":
+            message_history = state.get("message_history", [])
+            if specific_key:
+                try:
+                    message_number = int(specific_key)
+                    if 1 <= message_number <= len(message_history):
+                        message = message_history[message_number - 1]  # Convert to 0-based index
+                        return {
+                            "status": "success",
+                            "data": message,
+                            "message": f"Message #{message_number}: {message.get('user_input', 'No text')}"
+                        }
+                    else:
+                        return {
+                            "status": "not_found",
+                            "message": f"Message #{message_number} not found. Available: 1-{len(message_history)}"
+                        }
+                except ValueError:
+                    return {
+                        "status": "error",
+                        "message": f"Invalid message number: {specific_key}"
+                    }
+            return {
+                "status": "success",
+                "data": message_history,
+                "message": f"Found {len(message_history)} messages in history"
             }
         
         elif category == "interaction_stats":
@@ -212,33 +237,7 @@ def recall_conversation(
         }
 
 
-# --- Wrapper aliases for automatic function calling ---
-
-@FunctionTool
-def recall(
-    category: str = "all",
-    specific_key: Optional[str] = None,
-    tool_context: ToolContext = None
-) -> Dict[str, Any]:
-    """Alias for recall_conversation to expose function name 'recall' for AFC."""
-    return recall_conversation.func(
-        category=category,
-        specific_key=specific_key,
-        tool_context=tool_context
-    )
-
-
-@FunctionTool
-def recall_get_nth_user_message(
-    message_number: int,
-    tool_context: ToolContext = None
-) -> Dict[str, Any]:
-    """Retrieve nth user message (1-based index) from conversation history."""
-    return recall_conversation.func(
-        category="message_history",
-        specific_key=str(message_number),
-        tool_context=tool_context
-    )
+# --- Removed duplicate functions - use recall_conversation directly ---
 
 
 def _initialize_conversation_state(state: Dict[str, Any]) -> None:
@@ -301,26 +300,20 @@ def initialize_conversation_memory_callback(callback_context: CallbackContext) -
 
 @FunctionTool
 def get_user_preferences(
-    preference_key: Optional[str] = None,
-    tool_context: ToolContext = None
+    tool_context: ToolContext,
+    preference_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Retrieves user preferences from memory.
     
     Args:
-        preference_key: Specific preference to retrieve (optional)
         tool_context: ADK context with access to state
+        preference_key: Specific preference to retrieve (optional)
         
     Returns:
         User preferences data
     """
     try:
-        if tool_context is None:
-            return {
-                "status": "error",
-                "message": "No tool context provided"
-            }
-            
         state = tool_context.state
         preferences = state.get(const.USER_PREFERENCES, {})
         
@@ -358,8 +351,8 @@ def get_user_preferences(
 def update_user_preferences(
     preference_key: str,
     preference_value: str,
-    category: str = "user_preference",
-    tool_context: ToolContext = None
+    tool_context: ToolContext,
+    category: str = "user_preference"
 ) -> Dict[str, Any]:
     """
     Updates user preferences in memory.
@@ -367,19 +360,13 @@ def update_user_preferences(
     Args:
         preference_key: Key for the preference
         preference_value: Value to store
-        category: Preference category (default: user_preference)
         tool_context: ADK context with access to state
+        category: Preference category (default: user_preference)
         
     Returns:
         Operation status
     """
     try:
-        if tool_context is None:
-            return {
-                "status": "error",
-                "message": "No tool context provided"
-            }
-            
         state = tool_context.state
         
         # Initialize preferences if not exists

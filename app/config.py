@@ -3,12 +3,17 @@ Configuration management for ImmoAssist.
 
 Centralizes environment variables, feature flags, and system settings
 for the ImmoAssist AI-powered real estate investment assistant.
+Provides centralized access to all application configuration parameters.
 """
 
 import os
 import logging
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
 
 # Set default location to fix region mismatch issues
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west3")

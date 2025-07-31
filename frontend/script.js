@@ -10,6 +10,227 @@ import { renderChart } from './chartRenderer.js';
 // Удаляю строку import { renderChart } from './chartRenderer.js'; и любые другие import/export
 // Остальной код не меняется, renderChart вызывается как window.renderChart или просто renderChart
 
+// Agent Selector Module
+class AgentSelector {
+    constructor() {
+        this.selectedAgent = null;
+        this.isAutoMode = true;
+        this.modal = null;
+        this.agentsSelectorBtn = null;
+
+        
+        this.agentConfig = {
+            property: {
+                name: 'Immobiliensuche',
+                description: 'Objektsuche und Standortanalyse',
+                backendKey: 'property_specialist'
+            },
+            calculator: {
+                name: 'Renditeberechnung', 
+                description: 'Investitionsberechnungen und Renditeanalyse',
+                backendKey: 'calculator_specialist'
+            },
+            knowledge: {
+                name: 'Wissensdatenbank',
+                description: 'Begriffe und Definitionen im Immobilienbereich', 
+                backendKey: 'knowledge_specialist'
+            },
+            legal: {
+                name: 'Rechtsinformationen',
+                description: 'Gesetze und rechtliche Aspekte',
+                backendKey: 'legal_specialist'
+            },
+            market: {
+                name: 'Marktanalyse',
+                description: 'Trends und Marktentwicklungen',
+                backendKey: 'market_analyst'
+            },
+            course: {
+                name: 'Investitionskurs',
+                description: 'Lernmaterialien und Präsentationen',
+                backendKey: 'presentation_specialist'
+            }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupElements());
+        } else {
+            this.setupElements();
+        }
+    }
+    
+    setupElements() {
+        this.modal = document.getElementById('agent-selector-modal');
+        this.agentsSelectorBtn = document.getElementById('agents-selector-btn');
+
+        
+        if (!this.modal || !this.agentsSelectorBtn) {
+            console.error('Agent selector elements not found');
+            return;
+        }
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        // Agents selector button
+        this.agentsSelectorBtn.addEventListener('click', () => this.showModal());
+        
+        // Auto toggle button
+
+        
+        // Modal close button
+        const closeBtn = document.getElementById('modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.hideModal());
+        }
+        
+        // Modal overlay click
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) {
+                this.hideModal();
+            }
+        });
+        
+        // Specialist cards
+        const specialistCards = document.querySelectorAll('.specialist-card');
+        specialistCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const agentKey = card.getAttribute('data-agent');
+                this.selectAgent(agentKey);
+            });
+        });
+        
+        // Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+                this.hideModal();
+            }
+        });
+    }
+    
+    showModal() {
+        if (!this.modal) return;
+        
+        this.modal.classList.add('active');
+        this.agentsSelectorBtn.classList.add('active');
+        
+        // Update selected state in modal
+        this.updateModalSelection();
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+    
+    hideModal() {
+        if (!this.modal) return;
+        
+        this.modal.classList.remove('active');
+        this.agentsSelectorBtn.classList.remove('active');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+    }
+    
+    updateModalSelection() {
+        const cards = document.querySelectorAll('.specialist-card');
+        cards.forEach(card => {
+            card.classList.remove('selected');
+            const agentKey = card.getAttribute('data-agent');
+            if (agentKey === this.selectedAgent) {
+                card.classList.add('selected');
+            }
+        });
+    }
+    
+    selectAgent(agentKey) {
+        if (!this.agentConfig[agentKey]) return;
+        
+        this.selectedAgent = agentKey;
+        this.isAutoMode = false;
+        
+        // Update UI
+        this.updateAgentsSelectorButton();
+        this.updateAutoToggleButton();
+        this.updateModalSelection();
+        
+        // Hide modal
+        this.hideModal();
+        
+        console.log('Selected agent:', agentKey, this.agentConfig[agentKey]);
+          }
+      
+      toggleAutoMode() {
+          this.isAutoMode = !this.isAutoMode;
+          this.updateAutoToggleButton();
+          
+          // Update visual feedback
+          console.log('Auto mode:', this.isAutoMode ? 'enabled' : 'disabled');
+      }
+
+      updateAutoToggleButton() {
+
+          
+          if (this.isAutoMode) {
+            this.selectedAgent = null;
+        }
+        
+        this.updateAgentsSelectorButton();
+        this.updateAutoToggleButton();
+        
+        console.log('Auto mode:', this.isAutoMode);
+    }
+    
+    updateAgentsSelectorButton() {
+        if (!this.agentsSelectorBtn) return;
+        
+        const text = this.agentsSelectorBtn.querySelector('.agents-text');
+        if (text) {
+            if (this.isAutoMode || !this.selectedAgent) {
+                text.textContent = 'Agents';
+            } else {
+                const config = this.agentConfig[this.selectedAgent];
+                text.textContent = config ? config.name : 'Agents';
+            }
+        }
+    }
+    
+    updateAutoToggleButton() {
+
+        
+        if (this.isAutoMode) {
+
+        } else {
+
+        }
+    }
+    
+    getPreferredAgent() {
+        if (this.isAutoMode || !this.selectedAgent) {
+            return null;
+        }
+        
+        const config = this.agentConfig[this.selectedAgent];
+        return config ? config.backendKey : null;
+    }
+    
+    reset() {
+        this.selectedAgent = null;
+        this.isAutoMode = true;
+        this.updateAgentsSelectorButton();
+        this.updateAutoToggleButton();
+        this.updateModalSelection();
+    }
+}
+
+// Initialize agent selector
+const agentSelector = new AgentSelector();
+
 document.addEventListener('DOMContentLoaded', () => {
     const { chatMessages, chatInput, sendButton, micButton, voiceChatButton, languageToggle, currentLang } = elements;
 
@@ -79,8 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
+            // Get preferred agent from selector
+            const preferredAgent = agentSelector.getPreferredAgent();
+            
             await sendTextMessage(
-                { appName, userId, sessionId, message: userInput },
+                { appName, userId, sessionId, message: userInput, preferredAgent },
                 (jsonData, isFirst) => {
                     processEventData(jsonData, aiMessageElement, isFirst);
                     if (updateTimer) clearTimeout(updateTimer);

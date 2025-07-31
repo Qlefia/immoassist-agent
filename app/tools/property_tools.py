@@ -7,32 +7,41 @@ specifically tailored for the German real estate market.
 
 import logging
 import os
-from typing import Dict, Any, List, Optional
-from decimal import Decimal
+from typing import Dict, Any, List, Optional, Union
+from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
 from google.adk.tools import FunctionTool
 
 logger = logging.getLogger(__name__)
 
-# Constants for German real estate market
-DEFAULT_PROPERTY_APPRECIATION_RATE = 2.5  # Conservative annual appreciation
-DEFAULT_MAINTENANCE_COST_PERCENTAGE = 1.0  # Annual maintenance as % of property value
-DEFAULT_MANAGEMENT_FEE_PERCENTAGE = 5.0  # Property management as % of rent
-NOTARY_AND_REGISTRATION_FEE = 1.5  # Percentage of purchase price
-REAL_ESTATE_TRANSFER_TAX = {
+# Constants for German real estate market calculations
+DEFAULT_PROPERTY_APPRECIATION_RATE: float = 2.5  # Conservative annual appreciation percentage
+DEFAULT_MAINTENANCE_COST_PERCENTAGE: float = 1.0  # Annual maintenance as percentage of property value
+DEFAULT_MANAGEMENT_FEE_PERCENTAGE: float = 5.0  # Property management as percentage of rent
+NOTARY_AND_REGISTRATION_FEE: float = 1.5  # Percentage of purchase price
+REAL_ESTATE_TRANSFER_TAX: Dict[str, float] = {
     "berlin": 6.0,
     "bayern": 3.5,
     "default": 5.0
 }
+
+# Error messages for validation
+ERROR_INVALID_LOCATION = "Invalid location parameter provided"
+ERROR_INVALID_PRICE_RANGE = "Invalid price range format. Use format: min_price-max_price"
+ERROR_INVALID_SIZE_RANGE = "Invalid size range format. Use format: min_size-max_size"
+ERROR_API_UNAVAILABLE = "Property search API is currently unavailable"
+ERROR_CALCULATION_FAILED = "Investment calculation failed due to invalid parameters"
 
 
 @FunctionTool
 def search_properties(
     location: str,
     property_type: str = "apartment",
-    price_range: Optional[str] = None,
-    size_range: Optional[str] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    min_size: Optional[int] = None,
+    max_size: Optional[int] = None,
     max_results: int = 10
 ) -> Dict[str, Any]:
     """
@@ -44,38 +53,45 @@ def search_properties(
     Args:
         location: German city or region (e.g., "Berlin", "München", "Hamburg")
         property_type: Type of property (apartment, house, commercial, land)
-        price_range: Price range in format "min-max" (e.g., "300000-500000")
-        size_range: Size range in square meters "min-max" (e.g., "60-100")
+        min_price: Minimum price in EUR (optional)
+        max_price: Maximum price in EUR (optional)
+        min_size: Minimum size in square meters (optional)
+        max_size: Maximum size in square meters (optional)
         max_results: Maximum number of properties to return
         
     Returns:
-        Dictionary containing:
-        - List of properties with details and investment metrics
-        - Market summary for the location
-        - Search criteria used
+        Dictionary containing property listings with investment analysis
+        
+    Raises:
+        ValueError: If location is invalid or parameters are malformed
     """
     try:
-        logger.info(f"Searching properties in {location} - Type: {property_type}")
-        
-        # Parse price range if provided
-        min_price, max_price = None, None
-        if price_range:
-            try:
-                parts = price_range.split("-")
-                min_price = float(parts[0])
-                max_price = float(parts[1]) if len(parts) > 1 else None
-            except ValueError:
-                logger.warning(f"Invalid price range format: {price_range}")
-        
-        # Parse size range if provided
-        min_size, max_size = None, None
-        if size_range:
-            try:
-                parts = size_range.split("-")
-                min_size = float(parts[0])
-                max_size = float(parts[1]) if len(parts) > 1 else None
-            except ValueError:
-                logger.warning(f"Invalid size range format: {size_range}")
+        # Validate input parameters
+        if not location or not isinstance(location, str):
+            raise ValueError(ERROR_INVALID_LOCATION)
+            
+        # Validate price range parameters
+        if min_price is not None and (not isinstance(min_price, int) or min_price < 0):
+            raise ValueError("Minimum price must be a positive integer")
+        if max_price is not None and (not isinstance(max_price, int) or max_price < 0):
+            raise ValueError("Maximum price must be a positive integer")
+        if min_price is not None and max_price is not None and min_price > max_price:
+            raise ValueError("Minimum price cannot be greater than maximum price")
+            
+        # Validate size range parameters
+        if min_size is not None and (not isinstance(min_size, int) or min_size < 0):
+            raise ValueError("Minimum size must be a positive integer")
+        if max_size is not None and (not isinstance(max_size, int) or max_size < 0):
+            raise ValueError("Maximum size must be a positive integer")
+        if min_size is not None and max_size is not None and min_size > max_size:
+            raise ValueError("Minimum size cannot be greater than maximum size")
+            
+        # Log search parameters
+        logger.info(
+            f"Searching properties in {location} with filters: "
+            f"type={property_type}, price={min_price}-{max_price}, size={min_size}-{max_size}"
+        )
+
         
         # Check if property search API is configured
         property_api_key = os.getenv("PROPERTY_SEARCH_API_KEY")
@@ -89,8 +105,10 @@ def search_properties(
                 "search_criteria": {
                     "location": location,
                     "property_type": property_type,
-                    "price_range": price_range,
-                    "size_range": size_range
+                                    "min_price": min_price,
+                "max_price": max_price,
+                "min_size": min_size,
+                "max_size": max_size
                 },
                 "properties": _get_demo_properties(location, property_type),
                 "total_found": 2,
@@ -186,11 +204,11 @@ def get_property_details(
 
 @FunctionTool
 def calculate_investment_return(
-    purchase_price: float,
-    monthly_rent: float,
-    annual_expenses: Optional[float] = None,
-    financing_percentage: float = 0.0,
-    interest_rate: float = 3.5,
+    purchase_price: int,
+    monthly_rent: int,
+    annual_expenses: Optional[int] = None,
+    financing_percentage: int = 0,
+    interest_rate_percent: int = 4,
     investment_period_years: int = 10,
     location: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -205,7 +223,7 @@ def calculate_investment_return(
         monthly_rent: Expected monthly rental income in EUR
         annual_expenses: Annual operating expenses (if None, estimated automatically)
         financing_percentage: Percentage financed (0-100)
-        interest_rate: Annual loan interest rate (percentage)
+        interest_rate_percent: Annual loan interest rate as percentage (e.g., 4 for 4.0%)
         investment_period_years: Investment holding period
         location: Property location for tax calculation
         
@@ -215,9 +233,31 @@ def calculate_investment_return(
         - Cash flow projections
         - Tax implications
         - Total return estimates
+        
+    Raises:
+        ValueError: If input parameters are invalid or out of range
     """
     try:
-        logger.info(f"Calculating investment returns for €{purchase_price:,.0f} property")
+        # Validate input parameters
+        if purchase_price <= 0:
+            raise ValueError("Purchase price must be greater than 0")
+        if monthly_rent <= 0:
+            raise ValueError("Monthly rent must be greater than 0")
+        if financing_percentage < 0 or financing_percentage > 100:
+            raise ValueError("Financing percentage must be between 0 and 100")
+        if interest_rate_percent < 0:
+            raise ValueError("Interest rate must be greater than or equal to 0")
+        if investment_period_years <= 0:
+            raise ValueError("Investment period must be greater than 0")
+            
+        # Convert percentage to decimal for calculations
+        interest_rate = interest_rate_percent / 100.0
+        financing_ratio = financing_percentage / 100.0
+        
+        logger.info(
+            f"Calculating investment returns for €{purchase_price:,} property, "
+            f"rent: €{monthly_rent}/month"
+        )
         
         # Calculate acquisition costs (German specific)
         transfer_tax_rate = REAL_ESTATE_TRANSFER_TAX.get(
