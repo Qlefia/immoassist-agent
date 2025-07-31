@@ -65,3 +65,7 @@ KNOWLEDGE_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate knowledge retrieval with focus on accuracy and clarity.*
 """
+---
+
+*Specialized in German real estate knowledge retrieval with focus on accuracy and clarity.*
+"""
