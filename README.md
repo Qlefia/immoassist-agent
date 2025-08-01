@@ -261,28 +261,191 @@ gcloud services enable discoveryengine.googleapis.com
 git clone https://github.com/your-org/immoassist.git
 cd immoassist
 
-# 2. Установка Poetry (если не установлен)
+# 2. Создание виртуального окружения (обязательно)
+python -m venv venv
+
+# 3. Активация виртуального окружения
+# На Windows:
+venv\Scripts\activate
+# На Linux/macOS:
+source venv/bin/activate
+
+# 4. Установка Poetry в виртуальном окружении
 pip install poetry
 
-# 3. Установка зависимостей
+# 5. Установка зависимостей через Poetry
 poetry install
 
-# 4. Настройка аутентификации
+# 6. Настройка аутентификации Google Cloud
 gcloud auth application-default login
 
-# 5. Настройка окружения
+# 7. Настройка окружения
 cp .env.example .env
 # Отредактируйте .env с вашей конфигурацией
 
-# 6. Активация виртуального окружения
-poetry shell
-
-# 7. Запуск приложения
+# 8. Запуск приложения
 python run_agent.py
 
-# 8. Доступ к интерфейсу
+# 9. Доступ к интерфейсу
 # http://localhost:8000
 ```
+
+**Важно:** Все Python зависимости должны быть установлены в виртуальном окружении (venv). Установка пакетов глобально не поддерживается.
+
+### Настройка Vertex AI
+
+#### Включение API
+
+Для работы системы необходимо включить следующие API в Google Cloud Console:
+
+```bash
+# Включение Vertex AI API
+gcloud services enable aiplatform.googleapis.com
+
+# Включение Discovery Engine API для RAG
+gcloud services enable discoveryengine.googleapis.com
+```
+
+Альтернативно, API можно включить через [консоль Google Cloud](https://cloud.google.com/vertex-ai/docs/featurestore/setup).
+
+#### Настройка IAM ролей
+
+Для корректной работы системы необходимо настроить следующие IAM роли:
+
+**Обязательные роли:**
+
+- `Vertex AI User` - для использования моделей и API
+- `Vertex AI Administrator` - для управления ресурсами
+- `Cloud Run Invoker` - для развертывания на Cloud Run
+- `Discovery Engine Admin` - для управления RAG корпусами
+- `Storage Object Admin` - для работы с Cloud Storage бакетами
+
+**Дополнительные роли для сервисного аккаунта:**
+
+- `Service Account User` - для использования сервисных аккаунтов
+- `Cloud Storage Admin` - для полного доступа к хранилищу
+
+#### Настройка RAG корпусов
+
+Система использует Vertex AI RAG Engine для работы с базой знаний. Необходимо создать следующие RAG корпусы через [консоль Vertex AI RAG](https://console.cloud.google.com/vertex-ai/rag/):
+
+**1. Основной корпус знаний**
+
+- Назначение: Общие знания о недвижимости, FAQ, справочная информация
+- Тип: Document Corpus
+- Источники: PDF-файлы, документация, справочники
+
+**2. Юридический корпус**
+
+- Назначение: Немецкое законодательство по недвижимости
+- Тип: Document Corpus
+- Источники:
+  - [Einkommensteuergesetz (EStG)](https://www.gesetze-im-internet.de/estg/)
+  - [Bürgerliches Gesetzbuch (BGB)](https://www.gesetze-im-internet.de/bgb/)
+  - [Gewerbeordnung (GewO) §34c](https://www.gesetze-im-internet.de/gewo_34cdv/)
+
+**3. Презентационный корпус**
+
+- Назначение: Образовательные материалы, курсы, презентации
+- Тип: Document Corpus
+- Источники: Учебные материалы, курс чтобы агент мог искать там информацию по курсу
+
+#### Создание RAG корпуса
+
+```bash
+# Создание корпуса через REST API
+curl -X POST \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     -H "Content-Type: application/json; charset=utf-8" \
+     -d '{
+       "display_name": "Immobilien Knowledge Base",
+       "description": "Корпус знаний для немецкой недвижимости"
+     }' \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora"
+```
+
+#### Загрузка документов в RAG корпус
+
+**Через Cloud Storage:**
+
+```bash
+# Импорт документов из Cloud Storage
+curl -X POST \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     -H "Content-Type: application/json; charset=utf-8" \
+     -d '{
+       "import_rag_files_config": {
+         "gcs_source": {
+           "uris": ["gs://your-bucket/documents/"]
+         },
+         "rag_file_chunking_config": {
+           "chunk_size": 1024,
+           "chunk_overlap": 100
+         }
+       }
+     }' \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora/RAG_CORPUS_ID/ragFiles:import"
+```
+
+**Через прямую загрузку:**
+
+```bash
+# Загрузка отдельного файла
+curl -X POST \
+    -H "X-Goog-Upload-Protocol: multipart" \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -F metadata='{"rag_file": {"display_name": "Документ", "description": "Описание"}}' \
+    -F file=@/path/to/document.pdf \
+    "https://europe-west3-aiplatform.googleapis.com/upload/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora/RAG_CORPUS_ID/ragFiles:upload"
+```
+
+#### Настройка Cloud Storage бакетов
+
+Для хранения документов RAG корпусов рекомендуется создать структурированные Cloud Storage бакеты:
+
+```bash
+# Создание основного бакета для документов
+gsutil mb -p your-project-id -c STANDARD -l europe-west3 gs://your-project-rag-documents
+
+# Создание структуры папок
+gsutil -m cp -r local-documents/* gs://your-project-rag-documents/knowledge-base/
+gsutil -m cp -r legal-documents/* gs://your-project-rag-documents/legal/
+gsutil -m cp -r presentations/* gs://your-project-rag-documents/presentations/
+```
+
+**Рекомендуемая структура бакета:**
+
+```
+gs://your-project-rag-documents/
+├── knowledge-base/
+│   ├── faq/
+│   ├── handbooks/
+│   └── general/
+├── legal/
+│   ├── estg/
+│   ├── bgb/
+│   └── gewo/
+└── presentations/
+    ├── courses/
+    └── materials/
+```
+
+#### Автоматическая векторизация
+
+RAG корпусы автоматически векторизируют загруженные документы с использованием модели `text-embedding-005`. Дополнительная настройка векторизации не требуется.
+
+**Поддерживаемые форматы документов:**
+
+- PDF (.pdf)
+- Microsoft Word (.docx, .doc)
+- Текстовые файлы (.txt)
+- HTML (.html, .htm)
+- Markdown (.md)
+
+**Параметры:**
+
+- `chunk_size`: 1024 токена (рекомендуется для большинства документов)
+- `chunk_overlap`: 100 токенов (обеспечивает связность между чанками)
 
 ### Конфигурация окружения
 
@@ -291,18 +454,23 @@ python run_agent.py
 ```bash
 # Конфигурация Google Cloud
 GOOGLE_GENAI_USE_VERTEXAI=True
-GOOGLE_CLOUD_PROJECT=2944864777
-GOOGLE_CLOUD_LOCATION=europe-west1
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=europe-west3
 
 # Конфигурация моделей
 MODEL_NAME=gemini-2.5-flash
 SPECIALIST_MODEL=gemini-2.5-flash
 CHAT_MODEL=gemini-2.5-flash
 
-# Конфигурация RAG
-RAG_CORPUS=projects/gothic-agility-464209-f4/locations/europe-west3/ragCorpora/2305843009213693952
-LEGAL_RAG_CORPUS=projects/gothic-agility-464209-f4/locations/europe-west3/ragCorpora/6917529027641801856
-PRESENTATION_RAG_CORPUS=projects/gothic-agility-464209-f4/locations/europe-west3/ragCorpora/3379951528341557248
+# Конфигурация RAG корпусов
+# Основной корпус знаний
+RAG_CORPUS=projects/your-project-id/locations/europe-west3/ragCorpora/CORPUS_ID_1
+
+# Юридический корпус (законодательство)
+LEGAL_RAG_CORPUS=projects/your-project-id/locations/europe-west3/ragCorpora/CORPUS_ID_2
+
+# Презентационный корпус (образовательные материалы)
+PRESENTATION_RAG_CORPUS=projects/your-project-id/locations/europe-west3/ragCorpora/CORPUS_ID_3
 
 # Флаги функций
 ENABLE_VOICE_SYNTHESIS=true
@@ -313,6 +481,79 @@ ENABLE_CONVERSATION_HISTORY=true
 PORT=8000
 DEBUG=false
 ```
+
+**Получение ID RAG корпуса:**
+
+После создания RAG корпуса через консоль или API, ID можно найти в деталях корпуса в формате:
+`projects/your-project-id/locations/europe-west3/ragCorpora/NUMERIC_ID`
+
+Пример: `projects/gothic-agility-464209-f4/locations/europe-west3/ragCorpora/2305843009213693952`
+
+#### Управление RAG корпусами
+
+**Просмотр существующих корпусов:**
+
+```bash
+# Список всех RAG корпусов
+curl -X GET \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora"
+```
+
+**Получение информации о корпусе:**
+
+```bash
+# Детали конкретного корпуса
+curl -X GET \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora/RAG_CORPUS_ID"
+```
+
+**Список файлов в корпусе:**
+
+```bash
+# Просмотр загруженных файлов
+curl -X GET \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora/RAG_CORPUS_ID/ragFiles"
+```
+
+**Тестирование RAG поиска:**
+
+```bash
+# Тестовый запрос к RAG корпусу
+curl -X POST \
+     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "vertex_rag_store": {
+         "rag_resources": {
+           "rag_corpus": "projects/YOUR_PROJECT_ID/locations/europe-west3/ragCorpora/RAG_CORPUS_ID"
+         }
+       },
+       "query": {
+         "text": "Как рассчитать налоги на недвижимость в Германии?",
+         "similarity_top_k": 5
+       }
+     }' \
+     "https://europe-west3-aiplatform.googleapis.com/v1beta1/projects/YOUR_PROJECT_ID/locations/europe-west3:retrieveContexts"
+```
+
+#### Мониторинг и оптимизация
+
+**Метрики производительности:**
+
+- Время ответа RAG запросов
+- Количество обработанных документов
+- Использование квот эмбеддинг модели
+- Точность поиска по релевантности
+
+**Рекомендации по оптимизации:**
+
+- Регулярно обновляйте документы в корпусах
+- Используйте соответствующие размеры чанков для разных типов документов
+- Мониторьте качество поиска и корректируйте пороги релевантности
+- Настройте гибридный поиск для улучшения точности
 
 ## Основные функции
 
