@@ -497,18 +497,18 @@ def _generate_style_recommendations(
     # Adapt to interaction type
     if interaction_type == "greeting":
         recommendations["tone_level"] = "friendly"
-        recommendations["personalization_notes"] = (
-            "Warm initial greeting, introduce yourself."
-        )
+        recommendations[
+            "personalization_notes"
+        ] = "Warm initial greeting, introduce yourself."
     elif interaction_type == "repeat_greeting":
         recommendations["tone_level"] = "casual"
-        recommendations["personalization_notes"] = (
-            "Short friendly greeting, transition to business."
-        )
+        recommendations[
+            "personalization_notes"
+        ] = "Short friendly greeting, transition to business."
     elif interaction_type == "closing":
-        recommendations["personalization_notes"] = (
-            "Summarize, offer further assistance."
-        )
+        recommendations[
+            "personalization_notes"
+        ] = "Summarize, offer further assistance."
 
     # Adapt to emotional tone
     if emotional_tone == "positive":
