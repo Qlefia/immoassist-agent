@@ -68,10 +68,10 @@ def _analyze_user_input_with_llm(
     # Create analysis prompt for LLM (commented out for now)
     # analysis_prompt = f"""
     # Analyze this user message in the context of a German real estate consultation:
-    # 
+    #
     # User message: "{user_input}"
     # Session context: {json.dumps(session_context, ensure_ascii=False)}
-    # 
+    #
     # Provide analysis in this exact JSON format:
     # {{
     #     "interaction_type": "greeting|repeat_greeting|question|ongoing|closing",
@@ -82,7 +82,7 @@ def _analyze_user_input_with_llm(
     #     "intent": "brief description of user's intent",
     #     "urgency_level": "low|medium|high"
     # }}
-    # 
+    #
     # Consider:
     # - Language (German, English, Russian)
     # - Real estate context (investment, purchase, rental)
