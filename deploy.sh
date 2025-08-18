@@ -20,7 +20,7 @@ echo ""
 
 # Шаг 1: Сборка Docker образа
 echo "📦 Сборка Docker образа..."
-docker build -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
+docker build -f Dockerfile.simple -t gcr.io/$PROJECT_ID/$IMAGE_NAME:latest .
 
 if [ $? -ne 0 ]; then
     echo "❌ Ошибка при сборке Docker образа"

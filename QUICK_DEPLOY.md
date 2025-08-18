@@ -33,7 +33,7 @@ gcloud run deploy immoassist \
 4. **PORT:** НЕ добавлять в env vars (зарезервировано Cloud Run)
 5. **Agents:** Папка исключена в `.dockerignore`
 
-## 🔄 Проверка работы
+## Проверка работы
 
 ```bash
 curl -I https://immoassist-29448644777.europe-central2.run.app/chat/
