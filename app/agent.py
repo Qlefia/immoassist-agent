@@ -23,7 +23,7 @@ Enterprise-ready multi-agent system following ADK best practices with:
 """
 
 import logging
-from typing import List
+from typing import List, Any
 
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
