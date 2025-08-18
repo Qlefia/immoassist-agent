@@ -23,18 +23,12 @@ Enterprise-ready multi-agent system following ADK best practices with:
 """
 
 import logging
-from typing import List, Optional
+from typing import List
 
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 
 # Import observability for monitoring
-from .observability import (
-    monitor_agent,
-    track_user_interaction,
-    track_error,
-    AlertSeverity,
-)
 
 from .config import config
 
@@ -60,7 +54,6 @@ from .tools.conversation_tools import analyze_conversation_context
 from .tools.memory_tools import (
     memorize_conversation,
     recall_conversation,
-    initialize_conversation_memory_callback,
 )
 from .tools.legal_tools import search_legal_rag
 from .tools.presentation_tools import search_presentation_rag

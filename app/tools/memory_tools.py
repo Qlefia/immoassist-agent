@@ -5,10 +5,9 @@ Tools for conversation memory management using callback_context.state
 as the primary storage, following ADK agent patterns.
 """
 
-import json
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 from google.adk.tools import FunctionTool, ToolContext
 from google.adk.agents.callback_context import CallbackContext
@@ -75,7 +74,7 @@ def recall_conversation(
     """
     try:
         state = tool_context.state
-        logger.debug(f"RECALL_CONVERSATION: Checking state for memory data")
+        logger.debug("RECALL_CONVERSATION: Checking state for memory data")
 
         # Check if conversation is initialized OR message history exists (fallback)
         has_init_flag = const.CONVERSATION_INITIALIZED in state
@@ -338,7 +337,7 @@ def get_user_preferences(
             return {
                 "status": "success",
                 "data": preferences,
-                "message": f"Retrieved all user preferences",
+                "message": "Retrieved all user preferences",
             }
 
     except Exception as e:

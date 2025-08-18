@@ -6,7 +6,6 @@ Deployment Guidelines and Google Cloud best practices.
 """
 
 import asyncio
-import logging
 import time
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
@@ -146,7 +145,7 @@ class HealthChecker:
                 from google.cloud.aiplatform import Model
 
                 # Test model endpoint availability
-                models = Model.list(limit=1)
+                _ = Model.list(limit=1)
 
                 latency = (time.time() - start_time) * 1000
 

@@ -5,7 +5,6 @@ Tools for analyzing and managing conversation context using LLM-based analysis
 instead of hardcoded keywords for better scalability and context understanding.
 """
 
-import json
 import logging
 from typing import Dict, Any, Optional, List
 
@@ -66,30 +65,30 @@ def _analyze_user_input_with_llm(
     Analyzes user input using structured LLM prompting for intelligent
     classification instead of keyword matching.
     """
-    # Create analysis prompt for LLM
-    analysis_prompt = f"""
-    Analyze this user message in the context of a German real estate consultation:
-    
-    User message: "{user_input}"
-    Session context: {json.dumps(session_context, ensure_ascii=False)}
-    
-    Provide analysis in this exact JSON format:
-    {{
-        "interaction_type": "greeting|repeat_greeting|question|ongoing|closing",
-        "emotional_tone": "positive|negative|neutral|polite|excited|concerned",
-        "conversation_phase": "opening|exploration|decision|closing",
-        "topics_mentioned": ["list of real estate topics mentioned"],
-        "user_preferences": {{"key": "value pairs of preferences"}},
-        "intent": "brief description of user's intent",
-        "urgency_level": "low|medium|high"
-    }}
-    
-    Consider:
-    - Language (German, English, Russian)
-    - Real estate context (investment, purchase, rental)
-    - Emotional indicators
-    - Implicit preferences (budget hints, location mentions)
-    """
+    # Create analysis prompt for LLM (commented out for now)
+    # analysis_prompt = f"""
+    # Analyze this user message in the context of a German real estate consultation:
+    # 
+    # User message: "{user_input}"
+    # Session context: {json.dumps(session_context, ensure_ascii=False)}
+    # 
+    # Provide analysis in this exact JSON format:
+    # {{
+    #     "interaction_type": "greeting|repeat_greeting|question|ongoing|closing",
+    #     "emotional_tone": "positive|negative|neutral|polite|excited|concerned",
+    #     "conversation_phase": "opening|exploration|decision|closing",
+    #     "topics_mentioned": ["list of real estate topics mentioned"],
+    #     "user_preferences": {{"key": "value pairs of preferences"}},
+    #     "intent": "brief description of user's intent",
+    #     "urgency_level": "low|medium|high"
+    # }}
+    # 
+    # Consider:
+    # - Language (German, English, Russian)
+    # - Real estate context (investment, purchase, rental)
+    # - Emotional indicators
+    # - Implicit preferences (budget hints, location mentions)
+    # """
 
     try:
         # Here we would call LLM for analysis
@@ -107,7 +106,7 @@ def _intelligent_heuristic_analysis(
     Intelligent heuristic analysis as fallback when LLM is unavailable.
     Uses pattern recognition and context awareness.
     """
-    user_input_lower = user_input.lower()
+    # user_input_lower = user_input.lower()  # Commented out as not used
 
     # Determine interaction type using context-aware patterns
     interaction_type = _determine_interaction_type_intelligent(

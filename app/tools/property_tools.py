@@ -7,8 +7,7 @@ specifically tailored for the German real estate market.
 
 import logging
 import os
-from typing import Dict, Any, List, Optional, Union
-from decimal import Decimal, InvalidOperation
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from google.adk.tools import FunctionTool
@@ -257,7 +256,7 @@ def calculate_investment_return(
 
         # Convert percentage to decimal for calculations
         interest_rate = interest_rate_percent / 100.0
-        financing_ratio = financing_percentage / 100.0
+        # financing_ratio = financing_percentage / 100.0  # Commented out as not used
 
         logger.info(
             f"Calculating investment returns for €{purchase_price:,} property, "

@@ -9,7 +9,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from google.adk.agents.callback_context import CallbackContext
 
 from ..shared_libraries import conversation_constants as const

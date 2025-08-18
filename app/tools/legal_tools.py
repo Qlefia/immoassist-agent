@@ -4,7 +4,6 @@ Legal tools for ImmoAssist.
 Provides RAG-based knowledge retrieval for German real estate law information.
 """
 
-import os
 from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
 from vertexai.preview import rag
 from app.config import config

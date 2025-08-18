@@ -11,7 +11,7 @@ import functools
 import traceback
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Callable, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 import threading
 import asyncio

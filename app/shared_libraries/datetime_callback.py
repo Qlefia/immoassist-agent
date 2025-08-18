@@ -6,7 +6,7 @@ content and ensures the agent uses the get_current_berlin_time tool.
 """
 
 import re
-from typing import Any, Dict, Optional
+from typing import Optional
 import logging
 from google.adk.agents.invocation_context import InvocationContext
 

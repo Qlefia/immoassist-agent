@@ -5,7 +5,6 @@ Uses callback_context.state for persistent memory storage following
 ADK agent patterns for state management and conversation flow control.
 """
 
-import json
 import logging
 from typing import Any, Dict, Optional
 from datetime import datetime
@@ -13,10 +12,8 @@ import vertexai
 from vertexai.preview.language_models import ChatModel
 
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.agents.invocation_context import InvocationContext
 from google.adk.models import LlmRequest
 from google.adk.tools import BaseTool
-from google.adk.tools.tool_context import ToolContext
 
 from app.config import config
 

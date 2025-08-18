@@ -7,15 +7,13 @@ into unified system for better agent coordination.
 
 import json
 import logging
-from typing import Optional, Dict, Any
-from datetime import datetime
+from typing import Optional
 
 from google.adk.agents.callback_context import CallbackContext
 
 from .conversation_callbacks import (
     before_agent_conversation_callback,
     after_agent_conversation_callback as original_after_agent_callback,
-    conversation_style_enhancer_callback,
 )
 from .datetime_callback import datetime_awareness_callback
 from . import conversation_constants as const
@@ -42,8 +40,6 @@ def enhanced_before_agent_callback(callback_context: CallbackContext) -> Optiona
         Exception: Logs but does not raise exceptions to prevent agent disruption
     """
     try:
-        state = callback_context.state
-
         # Extract and store preferred agent from request if present
         _extract_and_store_preferred_agent(callback_context)
 
