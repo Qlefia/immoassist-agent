@@ -79,7 +79,7 @@ class ImmoAssistConfig:
     and provides configuration access throughout the application.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize configuration from environment variables."""
         self._load_configuration()
         self._validate_required_settings()

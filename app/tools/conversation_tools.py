@@ -486,7 +486,7 @@ def _generate_style_recommendations(
     session_context: dict,
 ) -> Dict[str, Any]:
     """Generates style recommendations for the response."""
-    recommendations = {
+    recommendations: Dict[str, Any] = {
         "tone_level": "semi_formal",
         "energy_match": True,
         "personalization_notes": "",

@@ -145,7 +145,7 @@ class HealthChecker:
                 from google.cloud.aiplatform import Model
 
                 # Test model endpoint availability
-                _ = Model.list(limit=1)
+                _ = Model.list()
 
                 latency = (time.time() - start_time) * 1000
 

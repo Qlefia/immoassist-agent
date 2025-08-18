@@ -320,21 +320,21 @@ def calculate_investment_return(
         # Property value projection
         appreciation_rate = DEFAULT_PROPERTY_APPRECIATION_RATE / 100
         future_property_value = purchase_price * (
-            (1 + appreciation_rate) ** investment_period_years
+            (1 + appreciation_rate) ** (investment_period_years or 0)
         )
 
         # Total return calculation
-        total_rental_income = net_cash_flow * investment_period_years
+        total_rental_income = net_cash_flow * (investment_period_years or 0)
         capital_gain = future_property_value - purchase_price
         loan_paydown = (
-            annual_principal * investment_period_years
+            annual_principal * (investment_period_years or 0)
             if financing_percentage > 0
             else 0
         )
         total_return = total_rental_income + capital_gain + loan_paydown
 
         # Annualized return
-        if equity_required > 0:
+        if equity_required > 0 and investment_period_years:
             total_return_rate = (
                 (total_return + equity_required) / equity_required
             ) ** (1 / investment_period_years) - 1

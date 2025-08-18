@@ -143,7 +143,7 @@ class PromptComposer:
             prompt = cls.get_agent_prompt(agent_name)
 
             # Basic validation checks
-            validation_results = {
+            validation_results: Dict[str, Any] = {
                 "agent_name": agent_name,
                 "prompt_length": len(prompt),
                 "has_base_system": "ImmoAssist Agent System" in prompt,

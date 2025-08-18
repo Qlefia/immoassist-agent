@@ -15,24 +15,14 @@ from .financial import (
 
 # Structured output schemas for tools and agents
 from .output_schemas import (
-    # Error handling
-    AgentError,
     # Financial calculation outputs
     CalculationSummary,
-    ElevenLabsResponse,
     GermanTaxBenefits,
-    # Integration outputs
-    InvestmentCalculationResult,
-    InvestmentRecommendation,
-    # Knowledge base outputs
-    KnowledgeSearchResult,
-    ProcessGuide,
-    ProcessGuideStep,
+    # Property outputs
     PropertyDetailFinancials,
     PropertyDetailLocation,
     PropertyDetails,
     PropertyDetailSpecs,
-    # Property outputs
     PropertySearchItem,
 )
 from .output_schemas import PropertySearchResult as PropertySearchOutputResult
@@ -51,19 +41,12 @@ from .user import (
 )
 
 __all__ = [
-    "AgentError",
     "CalculationSummary",
     "ConversationHistory",
-    "ElevenLabsResponse",
     "FinancialCalculation",
     "GermanTaxBenefits",
-    "InvestmentCalculationResult",
     "InvestmentMetrics",
-    "InvestmentRecommendation",
-    "KnowledgeSearchResult",
     "LoanDetails",
-    "ProcessGuide",
-    "ProcessGuideStep",
     # Domain models
     "Property",
     "PropertyDetailFinancials",

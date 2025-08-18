@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Knowledge Specialist Agent for general information and definitions
 knowledge_specialist = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="KnowledgeSpecialist",
     instruction=KNOWLEDGE_SPECIALIST_PROMPT,
     tools=[search_knowledge_base, get_current_berlin_time],
@@ -81,7 +81,7 @@ knowledge_specialist = Agent(
 
 # Initialize Property Specialist Agent for property search and analysis
 property_specialist = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="PropertySpecialist",
     instruction=PROPERTY_SPECIALIST_PROMPT,
     tools=[
@@ -93,7 +93,7 @@ property_specialist = Agent(
 
 # Initialize Calculator Specialist Agent for investment calculations
 calculator_specialist = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="CalculatorSpecialist",
     instruction=CALCULATOR_SPECIALIST_PROMPT,
     tools=[calculate_investment_return, get_current_berlin_time],
@@ -101,7 +101,7 @@ calculator_specialist = Agent(
 
 # Initialize Market Analyst Agent for market trend analysis
 market_analyst = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="MarketAnalyst",
     instruction=MARKET_ANALYST_PROMPT,
     tools=[get_current_berlin_time],  # Analysis based on provided data and current time
@@ -109,7 +109,7 @@ market_analyst = Agent(
 
 # Initialize Legal Specialist Agent for German real estate law
 legal_specialist = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="LegalSpecialist",
     instruction=LEGAL_SPECIALIST_PROMPT,
     tools=[search_legal_rag, get_current_berlin_time],
@@ -117,20 +117,20 @@ legal_specialist = Agent(
 
 # Initialize Presentation Specialist Agent for course materials
 presentation_specialist = Agent(
-    model=config.specialist_model,
+    model=config.specialist_model or "gemini-2.5-flash",
     name="PresentationSpecialist",
     instruction=PRESENTATION_SPECIALIST_PROMPT,
     tools=[search_presentation_rag, get_current_berlin_time],
 )
 
 
-def _build_coordination_tools() -> List[object]:
+def _build_coordination_tools() -> List[Any]:
     """Build coordination specialist tools based on enabled feature flags.
 
     Returns:
         List of available tools for the coordination specialist agent.
     """
-    tools = [
+    tools: List[Any] = [
         analyze_conversation_context,
         memorize_conversation,
         recall_conversation,
@@ -149,7 +149,7 @@ def _build_coordination_tools() -> List[object]:
 
 # Initialize Coordination Specialist Agent for multi-domain analysis
 coordination_specialist = Agent(
-    model=config.chat_model,
+    model=config.chat_model or "gemini-2.5-flash",
     name="CoordinationSpecialist",
     instruction=COORDINATION_SPECIALIST_PROMPT,
     tools=_build_coordination_tools(),
@@ -159,7 +159,7 @@ coordination_specialist = Agent(
 
 # Initialize Root Agent as main orchestrator with specialized sub-agents
 root_agent = Agent(
-    model=config.main_agent_model,
+    model=config.main_agent_model or "gemini-2.5-flash",
     name="ImmoAssistInvestmentAdvisor",
     instruction=ROOT_AGENT_PROMPT,
     before_agent_callback=enhanced_before_agent_callback,
