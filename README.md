@@ -78,7 +78,7 @@ graph TB
 ### Основной фреймворк
 
 - **Google Agent Development Kit (ADK) 1.0.0** - Фреймворк для разработки многоагентных AI-систем
-- **Python 3.12+** с архитектурой async/await
+- **Python 3.11+** с архитектурой async/await
 - **FastAPI** веб-фреймворк (через ADK)
 
 ### AI & ML
@@ -125,7 +125,7 @@ ImmoAssist включает сложный движок визуализации
 # Агент автоматически определяет потребности в визуализации
 create_chart(
     chart_type="line",
-    data=[{"year": 2024, "yield": 3.5}, {"year": 2025, "yield": 3.7}],
+    data=[{"x": "2024", "y": 3.5}, {"x": "2025", "y": 3.7}],
     title="5-летний прогноз доходности",
     x_label="Год",
     y_label="Доходность (%)"
@@ -204,13 +204,14 @@ immoassist/
 │   │   ├── integration_tools.py  # Интеграции внешних API
 │   │   ├── legal_tools.py        # Правовые инструменты
 │   │   ├── presentation_tools.py # Инструменты презентаций
-│   │   ├── datetime_tools.py     # Инструменты работы с датой/временем
-│   │   └── vertex_search.py      # Обертка Vertex AI Search
+│   │   └── datetime_tools.py     # Инструменты работы с датой/временем (ADK @FunctionTool)
 │   ├── services/                 # Бизнес-логика
 │   │   └── session_service.py    # Управление сессиями
 │   └── shared_libraries/         # Общие утилиты
-│       ├── conversation_callbacks.py # Колбэки разговоров
+│       ├── conversation_callbacks.py # Колбэки разговоров (устаревший)
+│       ├── conversation_callbacks_simple.py # Упрощенные колбэки
 │       ├── conversation_constants.py # Константы разговоров
+│       ├── language_detector.py      # Простое определение языка
 │       ├── combined_callbacks.py     # Объединенные колбэки
 │       └── datetime_callback.py      # Колбэки даты/времени
 ├── frontend/                     # Веб-интерфейс
@@ -229,11 +230,15 @@ immoassist/
 │   ├── test_conversation_flow.py # Тесты потока разговора
 │   └── README.md                # Документация тестирования
 ├── run_agent.py                 # Точка входа приложения
-├── pyproject.toml              # Конфигурация Poetry и зависимости
+├── pyproject.toml              # Конфигурация Poetry и зависимости (Python 3.11+)
 ├── test_agent_selection.py     # Тесты выбора агентов
 ├── test_datetime.py            # Тесты даты/времени
 ├── validation_script.py        # Скрипт валидации
-└── Dockerfile                  # Конфигурация контейнера
+├── Dockerfile                  # Конфигурация контейнера
+├── Dockerfile.simple           # Упрощенная сборка с Poetry
+├── .github/workflows/ci.yml    # CI/CD конфигурация (pytest, ruff, mypy, black)
+├── .gitignore                  # Игнорируемые файлы и директории
+└── REFACTORING_REPORT.md       # Отчет о проведенном рефакторинге
 ```
 
 ## Установка и настройка
@@ -253,6 +258,30 @@ immoassist/
 gcloud services enable aiplatform.googleapis.com
 gcloud services enable discoveryengine.googleapis.com
 ```
+
+### Последние изменения (рефакторинг)
+
+**ADK совместимость:**
+- Функция времени `get_current_berlin_time` обернута в `@FunctionTool` декоратор
+- Исправлена конфигурация логирования
+- Добавлены недостающие константы разговоров
+
+**Стандартизация:**
+- Единая версия Python 3.11+ во всех конфигурациях
+- Замена API_PORT на PORT для единообразия
+- Dockerfile.simple использует Poetry вместо requirements.txt
+- Добавлена зависимость psutil
+
+**Упрощение (KISS):**
+- Новый модуль `language_detector.py` для простого определения языка
+- Упрощенные колбэки `conversation_callbacks_simple.py`
+- Очистка неиспользуемых feature flags
+- Унифицированный формат данных для графиков
+
+**CI/CD и безопасность:**
+- GitHub Actions workflow для автоматических проверок
+- Обновленный .gitignore
+- Удалены секретные файлы из репозитория
 
 ### Быстрый старт
 
@@ -479,6 +508,7 @@ ENABLE_CONVERSATION_HISTORY=true
 
 # Конфигурация сервера
 PORT=8000
+HOST=0.0.0.0
 DEBUG=false
 ```
 
@@ -688,6 +718,9 @@ poetry run pytest tests/ -v
 poetry run black app/ tests/
 poetry run ruff check app/ tests/
 poetry run mypy app/
+
+# CI/CD проверки (автоматически в GitHub Actions)
+# pytest, ruff, mypy, black --check
 ```
 
 ## Производительность и масштабируемость
@@ -745,6 +778,8 @@ poetry run mypy app/
 | Движок визуализации данных     | Готово к продакшену | Интеграция Chart.js с динамической генерацией      |
 | RAG база знаний                | Готово к продакшену | Мультикорпусная интеграция Vertex AI Search        |
 | Финансовые расчеты             | Готово к продакшену | Оптимизация немецких налогов и ROI-анализ          |
+| ADK Tools интеграция           | Готово к продакшену | @FunctionTool обертки, упрощенные колбэки (KISS)   |
+| CI/CD конвейер                 | Готово к продакшену | GitHub Actions с pytest, ruff, mypy, black        |
 | Интеграция поиска недвижимости | В разработке        | Интеграция API недвижимости в процессе             |
 | Синтез голоса                  | Бета                | Доступна интеграция ElevenLabs TTS                 |
 | Email уведомления              | Бета                | Интеграция SMTP сервиса                            |
