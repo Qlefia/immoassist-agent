@@ -29,9 +29,15 @@ from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 
 # Import observability for monitoring
-from .observability import monitor_agent, track_user_interaction, track_error, AlertSeverity
+from .observability import (
+    monitor_agent,
+    track_user_interaction,
+    track_error,
+    AlertSeverity,
+)
 
 from .config import config
+
 # Import focused, modular prompts following ADK best practices
 from .prompts import (
     KNOWLEDGE_SPECIALIST_PROMPT,
@@ -43,10 +49,7 @@ from .prompts import (
     COORDINATION_SPECIALIST_PROMPT,
     PRESENTATION_SPECIALIST_PROMPT,
 )
-from .tools.integration_tools import (
-    generate_audio_elevenlabs,
-    send_email
-)
+from .tools.integration_tools import generate_audio_elevenlabs, send_email
 from .tools.knowledge_tools import search_knowledge_base
 from .tools.property_tools import (
     calculate_investment_return,
@@ -57,7 +60,7 @@ from .tools.conversation_tools import analyze_conversation_context
 from .tools.memory_tools import (
     memorize_conversation,
     recall_conversation,
-    initialize_conversation_memory_callback
+    initialize_conversation_memory_callback,
 )
 from .tools.legal_tools import search_legal_rag
 from .tools.presentation_tools import search_presentation_rag
@@ -127,9 +130,10 @@ presentation_specialist = Agent(
     tools=[search_presentation_rag, get_current_berlin_time],
 )
 
+
 def _build_coordination_tools() -> List[object]:
     """Build coordination specialist tools based on enabled feature flags.
-    
+
     Returns:
         List of available tools for the coordination specialist agent.
     """
@@ -139,15 +143,16 @@ def _build_coordination_tools() -> List[object]:
         recall_conversation,
         get_current_berlin_time,
     ]
-    
+
     # Add integration tools based on feature flag configuration
     if config.get_feature_flag("enable_voice_synthesis"):
         tools.append(generate_audio_elevenlabs)
-    
+
     if config.get_feature_flag("enable_email_notifications"):
         tools.append(send_email)
-    
+
     return tools
+
 
 # Initialize Coordination Specialist Agent for multi-domain analysis
 coordination_specialist = Agent(

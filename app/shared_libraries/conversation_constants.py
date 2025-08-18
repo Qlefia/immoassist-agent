@@ -56,4 +56,4 @@ COMMUNICATION_STYLE = "communication_style"
 
 # Course and presentation mode
 COURSE_MODE = "course_mode"
-PRESENTATION_CONTEXT = "presentation_context" 
+PRESENTATION_CONTEXT = "presentation_context"

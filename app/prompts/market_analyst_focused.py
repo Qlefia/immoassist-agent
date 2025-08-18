@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on market analysis.
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-MARKET_ANALYST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+MARKET_ANALYST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Market Analysis Expertise
 
@@ -52,3 +54,4 @@ MARKET_ANALYST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate market analysis with focus on investment opportunity identification.*
 """
+)

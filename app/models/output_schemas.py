@@ -19,21 +19,27 @@ class PropertySearchItem(BaseModel):
     size_sqm: int = Field(description="Property size in square meters")
     rooms: int = Field(description="Number of rooms")
     energy_class: str = Field(description="Energy efficiency class (A+ to H)")
-    monthly_rental_income: int = Field(description="Expected monthly rental income in euros")
-    expected_roi: float = Field(description="Expected return on investment as percentage")
+    monthly_rental_income: int = Field(
+        description="Expected monthly rental income in euros"
+    )
+    expected_roi: float = Field(
+        description="Expected return on investment as percentage"
+    )
 
 
 class PropertySearchResult(BaseModel):
     """Complete property search result with filters applied."""
 
-    properties: List[PropertySearchItem] = Field(description="List of matching properties")
+    properties: List[PropertySearchItem] = Field(
+        description="List of matching properties"
+    )
     total_count: int = Field(description="Total number of properties found")
     search_criteria: dict = Field(description="Applied search filters and criteria")
 
 
 class PropertyDetailSpecs(BaseModel):
     """Detailed property specifications."""
-    
+
     size_sqm: int = Field(description="Property size in square meters")
     rooms: int = Field(description="Total number of rooms")
     energy_class: str = Field(description="Energy efficiency classification")
@@ -56,7 +62,9 @@ class PropertyDetailFinancials(BaseModel):
 
     monthly_rental_income: int = Field(description="Expected monthly rental income")
     expected_roi: float = Field(description="Expected return on investment percentage")
-    rental_guarantee_months: int = Field(description="Number of months with rental guarantee")
+    rental_guarantee_months: int = Field(
+        description="Number of months with rental guarantee"
+    )
     management_fee_monthly: int = Field(description="Monthly property management fee")
 
 
@@ -78,17 +86,25 @@ class CalculationSummary(BaseModel):
     down_payment: int = Field(description="Initial down payment amount")
     loan_amount: int = Field(description="Financed loan amount")
     monthly_payment: float = Field(description="Monthly loan payment")
-    monthly_net_income: float = Field(description="Net monthly income before tax benefits")
-    monthly_net_with_tax: float = Field(description="Net monthly income including tax savings")
+    monthly_net_income: float = Field(
+        description="Net monthly income before tax benefits"
+    )
+    monthly_net_with_tax: float = Field(
+        description="Net monthly income including tax savings"
+    )
 
 
 class GermanTaxBenefits(BaseModel):
     """German tax benefits for real estate investment."""
 
     annual_depreciation: float = Field(description="Annual depreciation amount")
-    annual_tax_savings: float = Field(description="Annual tax savings from depreciation")
+    annual_tax_savings: float = Field(
+        description="Annual tax savings from depreciation"
+    )
     monthly_tax_savings: float = Field(description="Monthly tax savings")
-    special_depreciation_rate: float = Field(description="Special depreciation rate percentage")
+    special_depreciation_rate: float = Field(
+        description="Special depreciation rate percentage"
+    )
 
 
 class InvestmentRecommendation(BaseModel):
@@ -107,7 +123,9 @@ class InvestmentCalculationResult(BaseModel):
 
     summary: CalculationSummary = Field(description="Calculation summary")
     tax_benefits: GermanTaxBenefits = Field(description="German tax benefits")
-    recommendation: InvestmentRecommendation = Field(description="Investment recommendation")
+    recommendation: InvestmentRecommendation = Field(
+        description="Investment recommendation"
+    )
 
 
 class RagSource(BaseModel):
@@ -131,9 +149,9 @@ class ElevenLabsResponse(BaseModel):
     audio_url: Optional[str] = Field(description="URL to generated audio file")
     duration_seconds: Optional[float] = Field(description="Audio duration in seconds")
     voice_id: Optional[str] = Field(description="Voice identifier used")
-    error_message: Optional[str] = Field(description="Error message if generation failed")
-
-
+    error_message: Optional[str] = Field(
+        description="Error message if generation failed"
+    )
 
 
 class ConversationAnalysis(BaseModel):
@@ -144,20 +162,24 @@ class ConversationAnalysis(BaseModel):
     emotional_tone: str = Field(description="Detected emotional tone")
     topics_mentioned: List[str] = Field(description="Topics mentioned in input")
     user_preferences: dict = Field(description="Extracted user preferences")
-    response_recommendations: List[str] = Field(description="Recommended response strategies")
+    response_recommendations: List[str] = Field(
+        description="Recommended response strategies"
+    )
 
 
 class MemoryOperation(BaseModel):
     """Result of memory storage or retrieval operation."""
-    
+
     status: str = Field(description="Operation status (success, error, empty)")
     message: str = Field(description="Status message or description")
-    data: Optional[Union[dict, list, str]] = Field(description="Retrieved or stored data")
+    data: Optional[Union[dict, list, str]] = Field(
+        description="Retrieved or stored data"
+    )
 
 
 class MarketInsight(BaseModel):
     """Market analysis and insights for specific location."""
-    
+
     location: str = Field(description="Geographic location analyzed")
     property_type: str = Field(description="Type of property analyzed")
     market_metrics: dict = Field(description="Current market metrics and trends")

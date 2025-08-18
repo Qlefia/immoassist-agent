@@ -1,8 +1,10 @@
 from google.adk.tools import FunctionTool
 from typing import List, Dict, Any, Optional
 
+
 @FunctionTool
 # Chart creation tool for ImmoAssist frontend visualization
+
 
 def create_chart(
     chart_type: str,
@@ -30,38 +32,29 @@ def create_chart(
     """
     if options is None:
         options = {}
-    
+
     # Transform data to correct format for Chart.js
     processed_data = []
-    if chart_type in ['bar', 'line'] and data:
+    if chart_type in ["bar", "line"] and data:
         for item in data:
             # Standard format with label/value
-            if 'label' in item and 'value' in item:
-                processed_data.append({
-                    "x": str(item['label']),
-                    "y": item['value']
-                })
+            if "label" in item and "value" in item:
+                processed_data.append({"x": str(item["label"]), "y": item["value"]})
             # Chart.js format - already correct
-            elif 'x' in item and 'y' in item:
+            elif "x" in item and "y" in item:
                 processed_data.append(item)
             # Custom formats - try to detect and convert
-            elif 'year' in item and 'yield' in item:
-                processed_data.append({
-                    "x": str(item['year']),
-                    "y": item['yield']
-                })
+            elif "year" in item and "yield" in item:
+                processed_data.append({"x": str(item["year"]), "y": item["yield"]})
             # Generic fallback - use first two keys
             elif len(item) >= 2:
                 keys = list(item.keys())
-                processed_data.append({
-                    "x": str(item[keys[0]]),
-                    "y": item[keys[1]]
-                })
+                processed_data.append({"x": str(item[keys[0]]), "y": item[keys[1]]})
             else:
                 processed_data.append(item)
     else:
         processed_data = data
-    
+
     return {
         "type": "chart",
         "chartType": chart_type,
@@ -69,5 +62,5 @@ def create_chart(
         "xLabel": x_label,
         "yLabel": y_label,
         "data": processed_data,
-        "options": options
-    } 
+        "options": options,
+    }

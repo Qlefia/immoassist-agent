@@ -26,4 +26,4 @@ search_presentation_rag = VertexAiRagRetrieval(
 )
 
 # Export the tool
-__all__ = ["search_presentation_rag"] 
+__all__ = ["search_presentation_rag"]

@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on cross-domain coordinat
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-COORDINATION_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+COORDINATION_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Comprehensive Analysis
 
@@ -56,3 +58,4 @@ COORDINATION_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in complex real estate investment analysis requiring comprehensive multi-domain expertise.*
 """
+)

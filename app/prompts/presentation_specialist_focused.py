@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on educational content de
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-PRESENTATION_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+PRESENTATION_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Educational Expertise
 
@@ -87,3 +89,4 @@ PRESENTATION_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Expert real estate investment instructor specializing in German market education and practical investor training.*
 """
+)

@@ -50,4 +50,4 @@ Be very confident in your decision. Even single words have language patterns.
 
 User Input: "{user_input}"
 
-Language:""" 
+Language:"""

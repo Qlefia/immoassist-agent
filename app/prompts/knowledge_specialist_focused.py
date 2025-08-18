@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on knowledge retrieval.
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-KNOWLEDGE_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+KNOWLEDGE_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Knowledge Expertise
 
@@ -65,3 +67,4 @@ KNOWLEDGE_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate knowledge retrieval with focus on accuracy and clarity.*
 """
+)

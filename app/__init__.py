@@ -15,7 +15,7 @@
 """
 ImmoAssist - AI-powered German Real Estate Investment Assistant.
 
-A multi-agent system providing comprehensive support for real estate 
+A multi-agent system providing comprehensive support for real estate
 investment decisions in the German market, including property search,
 financial analysis, legal guidance, and market insights.
 """

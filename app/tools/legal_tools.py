@@ -26,4 +26,4 @@ search_legal_rag = VertexAiRagRetrieval(
 )
 
 # Export the tool
-__all__ = ["search_legal_rag"] 
+__all__ = ["search_legal_rag"]

@@ -22,7 +22,7 @@ PRESENTATION_SPECIALIST_PROMPT = get_agent_prompt("presentation_specialist")
 # Maintain backward compatibility while using new focused prompts
 __all__ = [
     "KNOWLEDGE_SPECIALIST_PROMPT",
-    "PROPERTY_SPECIALIST_PROMPT", 
+    "PROPERTY_SPECIALIST_PROMPT",
     "CALCULATOR_SPECIALIST_PROMPT",
     "MARKET_ANALYST_PROMPT",
     "ROOT_AGENT_PROMPT",
@@ -32,4 +32,4 @@ __all__ = [
     # Export composer utilities for advanced usage
     "get_agent_prompt",
     "PromptComposer",
-] 
+]

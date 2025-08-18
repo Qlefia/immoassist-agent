@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on legal expertise.
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-LEGAL_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+LEGAL_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Legal Expertise
 
@@ -65,3 +67,4 @@ LEGAL_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate legal information with focus on investor education and compliance guidance.*
 """
+)

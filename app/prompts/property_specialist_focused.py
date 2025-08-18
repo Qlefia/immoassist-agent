@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on property search and an
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-PROPERTY_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+PROPERTY_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Property Analysis Expertise
 
@@ -51,3 +53,4 @@ PROPERTY_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate property search with focus on investment optimization and market expertise.*
 """
+)

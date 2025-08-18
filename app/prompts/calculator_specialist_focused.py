@@ -7,7 +7,9 @@ Uses base_system_prompt for common rules, focuses only on calculation expertise.
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT
 
-CALCULATOR_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
+CALCULATOR_SPECIALIST_FOCUSED_PROMPT = (
+    BASE_SYSTEM_PROMPT
+    + """
 
 ## Role-Specific Instructions: Financial Analysis Expertise
 
@@ -45,3 +47,4 @@ CALCULATOR_SPECIALIST_FOCUSED_PROMPT = BASE_SYSTEM_PROMPT + """
 
 *Specialized in German real estate investment calculations with focus on accuracy and actionable insights.*
 """
+)

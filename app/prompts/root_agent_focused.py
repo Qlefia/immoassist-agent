@@ -6,7 +6,7 @@ Uses base_system_prompt + coordination_rules + conversation_management.
 """
 
 from .base_system_prompt import BASE_SYSTEM_PROMPT, BUSINESS_CONTACT_INFO
-from .coordination_rules import COORDINATION_RULES  
+from .coordination_rules import COORDINATION_RULES
 from .conversation_management import CONVERSATION_MANAGEMENT
 
 ROOT_AGENT_FOCUSED_PROMPT = f"""

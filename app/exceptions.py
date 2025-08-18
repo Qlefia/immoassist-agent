@@ -217,9 +217,11 @@ class ExternalAPIError(ImmoAssistException):
             message=message,
             error_code="EXTERNAL_API_ERROR",
             category=ErrorCategory.EXTERNAL_API,
-            severity=ErrorSeverity.HIGH
-            if status_code and status_code >= 500
-            else ErrorSeverity.MEDIUM,
+            severity=(
+                ErrorSeverity.HIGH
+                if status_code and status_code >= 500
+                else ErrorSeverity.MEDIUM
+            ),
             context=context,
             recoverable=retryable,
             retry_after_seconds=retry_seconds,

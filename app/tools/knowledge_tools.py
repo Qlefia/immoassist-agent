@@ -26,4 +26,4 @@ search_knowledge_base = VertexAiRagRetrieval(
 )
 
 # Export the tool
-__all__ = ["search_knowledge_base"] 
+__all__ = ["search_knowledge_base"]
