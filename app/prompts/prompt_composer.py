@@ -5,7 +5,7 @@ Dynamic prompt composition following ADK best practices.
 Combines base system rules with role-specific instructions for consistent, maintainable prompts.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from .base_system_prompt import BASE_SYSTEM_PROMPT, BUSINESS_CONTACT_INFO
 from .coordination_rules import COORDINATION_RULES
 from .conversation_management import CONVERSATION_MANAGEMENT
