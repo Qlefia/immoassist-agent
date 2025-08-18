@@ -8,8 +8,10 @@ including current market data, legal changes, and time-sensitive calculations.
 from datetime import datetime
 import pytz
 from typing import Dict, Any
+from google.adk.tools import FunctionTool
 
 
+@FunctionTool
 def get_current_berlin_time() -> Dict[str, Any]:
     """
     Get current date and time in Berlin timezone.

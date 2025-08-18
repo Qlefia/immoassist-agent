@@ -63,9 +63,9 @@ from .tools.legal_tools import search_legal_rag
 from .tools.presentation_tools import search_presentation_rag
 from .tools.chart_tools import create_chart
 from .tools.datetime_tools import get_current_berlin_time
-from .shared_libraries.combined_callbacks import (
-    enhanced_before_agent_callback,
-    after_agent_conversation_callback,
+from .shared_libraries.conversation_callbacks_simple import (
+    before_agent_callback_simple as enhanced_before_agent_callback,
+    after_agent_callback_simple as after_agent_conversation_callback,
 )
 
 logger = logging.getLogger(__name__)

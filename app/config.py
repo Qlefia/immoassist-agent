@@ -58,10 +58,7 @@ class FeatureFlags:
     
     enable_voice_synthesis: bool = True
     enable_email_notifications: bool = True
-    enable_conversation_history: bool = True
     enable_rag_knowledge_base: bool = True
-    enable_property_search: bool = True
-    enable_investment_calculations: bool = True
 
 
 @dataclass
@@ -120,10 +117,7 @@ class ImmoAssistConfig:
         self.features = FeatureFlags(
             enable_voice_synthesis=self._get_bool_env("ENABLE_VOICE_SYNTHESIS", True),
             enable_email_notifications=self._get_bool_env("ENABLE_EMAIL_NOTIFICATIONS", True),
-            enable_conversation_history=self._get_bool_env("ENABLE_CONVERSATION_HISTORY", True),
-            enable_rag_knowledge_base=self._get_bool_env("ENABLE_RAG_KNOWLEDGE_BASE", True),
-            enable_property_search=self._get_bool_env("ENABLE_PROPERTY_SEARCH", True),
-            enable_investment_calculations=self._get_bool_env("ENABLE_INVESTMENT_CALCULATIONS", True)
+            enable_rag_knowledge_base=self._get_bool_env("ENABLE_RAG_KNOWLEDGE_BASE", True)
         )
         
         # Session configuration
@@ -142,8 +136,8 @@ class ImmoAssistConfig:
         self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
         
         # API settings
-        self.api_host = os.getenv("API_HOST", "0.0.0.0")
-        self.api_port = int(os.getenv("API_PORT", "8080"))
+        self.api_host = os.getenv("HOST", "0.0.0.0")
+        self.api_port = int(os.getenv("PORT", "8000"))
         self.api_workers = int(os.getenv("API_WORKERS", "4"))
 
         # Models
@@ -293,10 +287,7 @@ class ImmoAssistConfig:
             "features": {
                 "voice_synthesis": self.features.enable_voice_synthesis,
                 "email_notifications": self.features.enable_email_notifications,
-                "conversation_history": self.features.enable_conversation_history,
-                "rag_knowledge_base": self.features.enable_rag_knowledge_base,
-                "property_search": self.features.enable_property_search,
-                "investment_calculations": self.features.enable_investment_calculations
+                "rag_knowledge_base": self.features.enable_rag_knowledge_base
             },
             "session": {
                 "timeout_minutes": self.session.session_timeout_minutes,

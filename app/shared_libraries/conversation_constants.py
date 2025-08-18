@@ -32,6 +32,7 @@ PHASE_OPENING = "opening"
 PHASE_EXPLORATION = "exploration"
 PHASE_DECISION = "decision"
 PHASE_FOLLOW_UP = "follow_up"
+PHASE_CLOSING = "closing"
 
 # Interaction types
 INTERACTION_GREETING = "greeting"
@@ -39,12 +40,19 @@ INTERACTION_QUESTION = "question"
 INTERACTION_CALCULATION = "calculation"
 INTERACTION_SEARCH = "search"
 INTERACTION_LEGAL = "legal"
+INTERACTION_ONGOING = "ongoing"
+INTERACTION_REPEAT_GREETING = "repeat_greeting"
+INTERACTION_CLOSING = "closing"
+
+# Current interaction tracking
+CURRENT_INTERACTION_TYPE = "current_interaction_type"
 
 # Language and style tracking
 LANGUAGE_PREFERENCE = "language_preference"
 ENFORCED_LANGUAGE = "enforced_language"
 EXPLICIT_TRANSLATION_REQUEST = "explicit_translation_request"
 TRANSLATION_TARGET = "translation_target"
+COMMUNICATION_STYLE = "communication_style"
 
 # Course and presentation mode
 COURSE_MODE = "course_mode"

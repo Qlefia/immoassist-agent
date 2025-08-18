@@ -190,7 +190,7 @@ def setup_logging() -> None:
         extra={
             "environment": config.environment,
             "log_level": config.log_level,
-            "structured_logging": config.enable_structured_logging,
+            "structured_logging": not config.is_development(),
         },
     )
 

@@ -242,7 +242,7 @@ immoassist/
 
 **Обязательно:**
 
-- Python 3.12+
+- Python 3.11+
 - Проект Google Cloud с включенными API
 - Google Cloud CLI с Application Default Credentials
 - Poetry для управления зависимостями

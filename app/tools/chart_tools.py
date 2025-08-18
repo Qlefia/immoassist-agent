@@ -17,7 +17,10 @@ def create_chart(
 
     Args:
         chart_type: Chart type (line, bar, pie, etc.)
-        data: List of data points in format [{"value": number, "label": string}, ...]
+        data: List of data points. Supported formats:
+              - [{"label": "2024", "value": 3.5}, ...] - standard format
+              - [{"x": "2024", "y": 3.5}, ...] - Chart.js format
+              - [{"year": 2024, "yield": 3.5}, ...] - custom format (will be converted)
         title: Chart title
         x_label: X-axis label
         y_label: Y-axis label
@@ -31,12 +34,28 @@ def create_chart(
     # Transform data to correct format for Chart.js
     processed_data = []
     if chart_type in ['bar', 'line'] and data:
-        # For bar and line charts use format {x: label, y: value}
         for item in data:
-            if 'value' in item and 'label' in item:
+            # Standard format with label/value
+            if 'label' in item and 'value' in item:
                 processed_data.append({
-                    "x": item['label'],  # Category/label for X-axis
-                    "y": item['value']   # Value for Y-axis
+                    "x": str(item['label']),
+                    "y": item['value']
+                })
+            # Chart.js format - already correct
+            elif 'x' in item and 'y' in item:
+                processed_data.append(item)
+            # Custom formats - try to detect and convert
+            elif 'year' in item and 'yield' in item:
+                processed_data.append({
+                    "x": str(item['year']),
+                    "y": item['yield']
+                })
+            # Generic fallback - use first two keys
+            elif len(item) >= 2:
+                keys = list(item.keys())
+                processed_data.append({
+                    "x": str(item[keys[0]]),
+                    "y": item[keys[1]]
                 })
             else:
                 processed_data.append(item)
