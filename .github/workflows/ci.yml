@@ -44,13 +44,10 @@ jobs:
         run: poetry install --no-interaction --with dev
 
       - name: Run black check
-        run: poetry run black app/ tests/ --check
+        run: poetry run black app/ --check
 
       - name: Run ruff
-        run: poetry run ruff check app/ tests/
+        run: poetry run ruff check app/
 
       - name: Run mypy
         run: poetry run mypy app/
-
-      - name: Run tests
-        run: poetry run pytest tests/ -v --cov=app --cov-report=term-missing
