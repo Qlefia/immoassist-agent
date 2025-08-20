@@ -39,7 +39,12 @@ export const elements = {
   get micButton() { return domCache.getElementById('mic-button'); },
   get voiceChatButton() { return domCache.getElementById('voice-chat-button'); },
   get languageToggle() { return domCache.getElementById('language-toggle'); },
-  get currentLang() { return domCache.getElementById('current-lang'); }
+  get currentLang() { return domCache.getElementById('current-lang'); },
+  get newSessionBtn() { return domCache.getElementById('new-session-btn'); },
+  get sessionsBtn() { return domCache.getElementById('sessions-btn'); },
+  get sessionsModal() { return domCache.getElementById('sessions-modal'); },
+  get sessionsModalClose() { return domCache.getElementById('sessions-modal-close'); },
+  get sessionsList() { return domCache.getElementById('sessions-list'); }
 };
 
 export { domCache }; 

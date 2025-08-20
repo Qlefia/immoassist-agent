@@ -150,10 +150,18 @@ def create_app() -> FastAPI:
     # In this repository, that is the project root directory (script_dir), not
     # the nested "agents" folder.
     agents_path = str(script_dir)
+    # For now, use default in-memory sessions (since VertexAiSessionService requires
+    # special setup that isn't directly supported by get_fast_api_app)
+    # TODO: Explore setting up VertexAiSessionService after app creation
+    
+    # Optional: use database session service if specified
+    session_service_uri = os.getenv("SESSION_SERVICE_URI")
+    
     app = get_fast_api_app(
         agents_dir=agents_path,
         web=True,  # Enable web interface
         allow_origins=["*"],  # Allow all origins for development
+        **({"session_service_uri": session_service_uri} if session_service_uri else {})
     )
     
     # Add TTS streaming endpoint

@@ -104,7 +104,12 @@
 
     <div id="chat-container">
         <div id="chat-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="130" height="24" viewBox="0 0 130 24" fill="none">
+            <button id="drawer-toggle-btn" class="icon-btn" title="Verlauf öffnen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/>
+                </svg>
+            </button>
+            <svg id="app-logo" xmlns="http://www.w3.org/2000/svg" width="130" height="24" viewBox="0 0 130 24" fill="none">
                 <g clip-path="url(#clip0_286_27)">
                   <path d="M61.8133 22.259C60.5386 21.5193 59.5641 20.5142 58.8898 19.2438C58.2247 17.9788 57.8954 16.6115 57.9019 15.142C57.923 13.6686 58.3202 12.2588 59.0935 10.9124C59.6801 9.89105 60.4068 9.04385 61.2736 8.37083C62.1458 7.68852 63.0878 7.19537 64.0998 6.89137C65.1264 6.58344 66.1693 6.48305 67.2285 6.59019C68.2877 6.69734 69.293 7.02699 70.2443 7.57915C71.519 8.31894 72.4888 9.32135 73.1539 10.5864C73.8283 11.8567 74.155 13.2286 74.1339 14.702C74.1221 16.1808 73.7269 17.598 72.9483 18.9536C72.367 19.9657 71.6429 20.8083 70.7761 21.4813C69.9092 22.1543 68.9625 22.6448 67.9359 22.9527C66.9238 23.2567 65.8883 23.3551 64.8292 23.248C63.7792 23.1462 62.7739 22.8166 61.8133 22.259ZM63.7651 18.8607C64.4394 19.252 65.1483 19.4221 65.892 19.3709C66.6357 19.3197 67.3306 19.0854 67.9767 18.6681C68.632 18.2561 69.1624 17.6973 69.5677 16.9916C69.9837 16.2673 70.2007 15.5143 70.2187 14.7324C70.2513 13.9466 70.0964 13.2191 69.7541 12.55C69.4263 11.8769 68.9392 11.3528 68.2926 10.9775C67.6276 10.5915 66.9232 10.4242 66.1795 10.4753C65.4358 10.5265 64.7335 10.7628 64.0729 11.1841C63.4122 11.6053 62.8792 12.1688 62.4739 12.8745C62.0527 13.608 61.8331 14.3657 61.8151 15.1476C61.7971 15.9295 61.9546 16.6523 62.2877 17.3161C62.6353 17.9759 63.1278 18.4908 63.7651 18.8607Z" fill="white"></path>
                   <path d="M21.5756 7.17684C22.4608 7.53838 23.0398 8.40311 23.0398 9.36363V14.9021L30.769 7.63927C31.4523 6.99723 32.4494 6.82406 33.3074 7.19846C34.1653 7.57286 34.7204 8.42341 34.7204 9.36363V12.8472L30.0244 17.686V14.801L22.2952 22.0638C21.6119 22.7058 20.6148 22.879 19.7568 22.5046C19.491 22.3886 19.2543 22.2269 19.0541 22.031C18.6082 21.5945 18.3438 20.9883 18.3438 20.3394V15.1734L11.749 21.9856C11.723 22.0124 11.6966 22.0385 11.6697 22.0638C10.7711 22.9095 9.36709 22.9141 8.46288 22.0638C8.4514 22.053 8.44001 22.042 8.42869 22.031C7.49936 21.1218 7.47916 19.6274 8.38358 18.6932L19.0091 7.71742C19.6755 7.02906 20.6904 6.8153 21.5756 7.17684Z" fill="white"></path>
@@ -135,6 +140,11 @@
                     </svg>
                 </button>
                 
+                <button id="new-session-btn" class="icon-btn" title="Neuer Dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </button>
 
                 <button id="language-toggle" title="Sprache wechseln / Change Language / Sprache ändern">
                     <span id="current-lang">AUTO</span>
@@ -150,7 +160,12 @@
 
             </div>
         </div>
-        <div id="chat-messages"></div>
+        <!-- Inline drawer and dim overlay inside chat, directly under header -->
+        <aside id="sessions-drawer" class="drawer">
+            <div class="drawer-content" id="sessions-list"></div>
+        </aside>
+        <div id="chat-dim" class="chat-dim"></div>
+        <div id="chat-messages" style="--chat-header-height: 64px; --chat-input-height: 64px;"></div>
         <div id="chat-input-container">
             <input type="text" id="chat-input" placeholder="Nachricht eingeben...">
             <button id="send-button">

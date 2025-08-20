@@ -1,6 +1,6 @@
 import { supportedLanguages } from './constants.js';
 import { toggleLanguage as toggleLanguageLogic } from './languageManager.js';
-import { createSession } from './apiClient.js';
+import { createSession, listUserSessions, getSessionDetails, deleteSession, devSendCode, devVerifyCode, getAuthToken } from './apiClient.js';
 import { convertMarkdownToHtml, renderMathFormulas } from './dom.js';
 import { addMessage, showTypingIndicator } from './chatUI.js';
 import { sendTextMessage } from './agentClient.js';
@@ -232,13 +232,36 @@ class AgentSelector {
 const agentSelector = new AgentSelector();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const { chatMessages, chatInput, sendButton, micButton, voiceChatButton, languageToggle, currentLang } = elements;
+    const { chatMessages, chatInput, sendButton, micButton, voiceChatButton, languageToggle, currentLang, newSessionBtn, sessionsBtn, sessionsModal, sessionsModalClose, sessionsList } = elements;
+    const drawer = document.getElementById('sessions-drawer');
+    const drawerToggleBtn = document.getElementById('drawer-toggle-btn');
+    const chatDim = document.getElementById('chat-dim');
 
     let userId = null;
     let sessionId = null;
     let appName = null;
     let currentLangIndex = 0;
     let isAutoLanguage = true;
+
+    const LAST_SESSION_KEY = 'immoassist_last_session';
+
+    function saveLastSession() {
+        try {
+            if (appName && userId && sessionId) {
+                localStorage.setItem(LAST_SESSION_KEY, JSON.stringify({ appName, userId, sessionId, ts: Date.now() }));
+            }
+        } catch {}
+    }
+
+    function readLastSession() {
+        try {
+            const raw = localStorage.getItem(LAST_SESSION_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (parsed?.appName && parsed?.userId && parsed?.sessionId) return parsed;
+        } catch {}
+        return null;
+    }
 
     // Check KaTeX loading
     let katexLoaded = false;
@@ -406,6 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check for grounding metadata sources (RAG)
         let groundingChunks = null;
+        
+        // Debug logging for RAG sources
+        if (parsed.grounding_metadata) {
+            console.log('Found grounding_metadata:', parsed.grounding_metadata);
+        }
         
         if (parsed.grounding_metadata?.grounding_chunks) {
             groundingChunks = parsed.grounding_metadata.grounding_chunks;
@@ -580,23 +608,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function extractRagSources(groundingChunks) {
+        if (!groundingChunks || !Array.isArray(groundingChunks)) return [];
+        
         const sources = [];
-        const seenUris = new Set();
-
+        const seenSources = new Set();
+        
         groundingChunks.forEach(chunk => {
-            if (chunk.retrieved_context?.rag_chunk) {
-                const ragChunk = chunk.retrieved_context.rag_chunk;
-                if (ragChunk.uri && !seenUris.has(ragChunk.uri)) {
-                    seenUris.add(ragChunk.uri);
+            if (chunk.retrieved_context?.rag_chunk?.uri) {
+                const uri = chunk.retrieved_context.rag_chunk.uri;
+                if (!seenSources.has(uri)) {
+                    seenSources.add(uri);
+                    const title = chunk.retrieved_context.rag_chunk.title || extractTitleFromPath(uri);
                     sources.push({
-                        title: extractTitleFromPath(ragChunk.uri),
+                        title: title,
                         url: '#',
-                        domain: 'Wissensdatenbank'
+                        domain: 'Wissensdatenbank',
+                        uri: uri
                     });
                 }
             }
         });
-
+        
         return sources;
     }
 
@@ -636,15 +668,150 @@ document.addEventListener('DOMContentLoaded', () => {
     window.processEventData = processEventData;
     window.displayRagSources = displayRagSources;
 
+    // Get session title by fetching session details and extracting first user message
+    async function getTitleForSession(sessionId, appName) {
+        try {
+            const details = await getSessionDetails(appName, userId, sessionId);
+            if (!details || !details.events || details.events.length === 0) {
+                return 'Neue Unterhaltung';
+            }
+            
+            // Find first user message in events
+            const userEvent = details.events.find(e => 
+                e.content?.parts?.[0]?.text && 
+                (e.content.role === 'user' || e.author === 'user')
+            );
+            
+            if (userEvent) {
+                const userText = userEvent.content.parts[0].text.trim();
+                return userText.length > 40 ? userText.substring(0, 40) + '...' : userText;
+            }
+            
+            return 'Neue Unterhaltung';
+        } catch (error) {
+            console.log('Error getting session title:', error);
+            return 'Neue Unterhaltung';
+        }
+    }
+
+    function rebuildChatFromSessionDetails(details) {
+        if (chatMessages) chatMessages.innerHTML = '';
+        addMessage('Sitzung geladen.', 'bot-message');
+        const events = details?.events || [];
+
+        console.log('Rebuilding chat from session details:', details);
+
+        // Accumulate sources that arrive before the final text message
+        let pendingSources = [];
+
+        const mergeSources = (target, incoming) => {
+            if (!Array.isArray(incoming) || incoming.length === 0) return target;
+            const byKey = new Set(target.map(s => s.uri || s.title));
+            incoming.forEach(s => {
+                const key = s.uri || s.title;
+                if (!byKey.has(key)) {
+                    byKey.add(key);
+                    target.push(s);
+                }
+            });
+            return target;
+        };
+
+        events.forEach(ev => {
+            const role = ev?.content?.role || ev?.role;
+            const parts = (ev?.content?.parts) || ev?.parts || [];
+
+            // 1) Extract sources from this event (if any) and stash them
+            // Grounding metadata on the event
+            if (ev.grounding_metadata?.grounding_chunks) {
+                const ragSources = extractRagSources(ev.grounding_metadata.grounding_chunks);
+                pendingSources = mergeSources(pendingSources, ragSources);
+            }
+            // Grounding metadata nested under usage_metadata
+            if (ev.usage_metadata?.grounding_metadata?.grounding_chunks) {
+                const ragSources = extractRagSources(ev.usage_metadata.grounding_metadata.grounding_chunks);
+                pendingSources = mergeSources(pendingSources, ragSources);
+            }
+            // Sources embedded in functionResponse.result
+            if (Array.isArray(parts) && parts.length) {
+                for (const part of parts) {
+                    const resp = part.functionResponse?.response;
+                    if (!resp) continue;
+
+                    // Case: response.result contains JSON with sources
+                    if (resp.result) {
+                        try {
+                            let resultString = resp.result;
+                            let jsonString = resultString;
+                            if (resultString.includes('```json')) {
+                                const jsonMatch = resultString.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+                                if (jsonMatch) jsonString = jsonMatch[1];
+                            }
+                            const data = JSON.parse(jsonString);
+                            if (Array.isArray(data.sources)) {
+                                const ragSources = data.sources.map(src => ({
+                                    title: extractTitleFromPath(src),
+                                    url: '#',
+                                    domain: 'Wissensdatenbank',
+                                    uri: src
+                                }));
+                                pendingSources = mergeSources(pendingSources, ragSources);
+                            }
+                        } catch {}
+                    }
+
+                    // Case: response.grounding_metadata
+                    if (resp.grounding_metadata?.grounding_chunks) {
+                        const ragSources = extractRagSources(resp.grounding_metadata.grounding_chunks);
+                        pendingSources = mergeSources(pendingSources, ragSources);
+                    }
+                }
+            }
+
+            // 2) Render text messages; if it's a bot message, attach any pending sources
+            const textParts = parts.filter(p => p?.text).map(p => p.text);
+            if (textParts.length) {
+                const txt = textParts.join(' ');
+                if (role === 'user') {
+                    addMessage(txt, 'user-message');
+                } else {
+                    const messageElement = addMessage(txt, 'bot-message');
+                    if (pendingSources.length) {
+                        displayRagSources(pendingSources, messageElement);
+                        pendingSources = [];
+                    }
+                }
+            }
+        });
+    }
+
+    async function restoreLastOrCreate() {
+        const saved = readLastSession();
+        if (saved) {
+            try {
+                const details = await getSessionDetails(saved.appName, saved.userId, saved.sessionId);
+                appName = saved.appName;
+                userId = saved.userId;
+                sessionId = saved.sessionId;
+                rebuildChatFromSessionDetails(details);
+                speechManager.updateContext?.({ appName, userId, sessionId });
+                return;
+            } catch (e) {
+                console.warn('Failed to restore last session, creating new one...', e);
+            }
+        }
+        const sessionData = await createSession();
+        userId = sessionData.userId;
+        sessionId = sessionData.id;
+        appName = sessionData.appName;
+        saveLastSession();
+    }
+
     // Initialize application
     async function init() {
         console.log('Initializing application...');
         try {
-            const sessionData = await createSession();
-            console.log('Session created:', sessionData);
-            userId = sessionData.userId;
-            sessionId = sessionData.id;
-            appName = sessionData.appName;
+            await restoreLastOrCreate();
             console.log('Session info set:', { userId, sessionId, appName });
 
             // Initialize speech manager
@@ -674,4 +841,196 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to create session:', error);
             addMessage('Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie, die Seite zu aktualisieren.', 'bot-message');
         });
+
+    // --- Session management UI ---
+    async function handleCreateNewSession() {
+        try {
+            const newSess = await createSession();
+            userId = newSess.userId;
+            sessionId = newSess.id;
+            appName = newSess.appName;
+            saveLastSession();
+            // Reset chat UI
+            if (chatMessages) chatMessages.innerHTML = '';
+            addMessage('Neuer Dialog gestartet.', 'bot-message');
+            // Reset agent selection
+            agentSelector.reset();
+            // Update speech manager context
+            speechManager.updateContext?.({ appName, userId, sessionId });
+        } catch (e) {
+            console.error('Failed to create new session', e);
+        }
+    }
+
+    async function populateSessionsList() {
+        const targetList = document.getElementById('sessions-list');
+        if (!targetList || !appName || !userId) return;
+        targetList.innerHTML = 'Lade Sitzungen...';
+        try {
+            const sessions = await listUserSessions(appName, userId);
+            if (!sessions.length) {
+                targetList.innerHTML = '<div>Keine Sitzungen gefunden.</div>';
+                return;
+            }
+            
+            // Group sessions by date
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            const groups = {
+                'Heute': [],
+                'Gestern': [],
+                'Letzte 7 Tage': [],
+                'Älter': []
+            };
+            
+            sessions.sort((a,b)=> (b.lastUpdateTime||0)-(a.lastUpdateTime||0)).forEach((s) => {
+                const ts = s.lastUpdateTime ? new Date(s.lastUpdateTime*1000) : new Date();
+                const sessionDate = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate());
+                
+                if (sessionDate.getTime() === today.getTime()) {
+                    groups['Heute'].push(s);
+                } else if (sessionDate.getTime() === yesterday.getTime()) {
+                    groups['Gestern'].push(s);
+                } else if (sessionDate >= weekAgo) {
+                    groups['Letzte 7 Tage'].push(s);
+                } else {
+                    groups['Älter'].push(s);
+                }
+            });
+            
+            const frag = document.createDocumentFragment();
+            
+            Object.entries(groups).forEach(([groupName, groupSessions]) => {
+                if (groupSessions.length === 0) return;
+                
+                // Add date group header
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'date-group';
+                groupHeader.textContent = groupName;
+                frag.appendChild(groupHeader);
+                
+                groupSessions.forEach((s) => {
+                    const sessionItem = document.createElement('div');
+                    sessionItem.className = 'session-item';
+                    if (s.id === sessionId) sessionItem.classList.add('active');
+                    
+                    // Get first user message as title
+                    let title = 'Neue Unterhaltung';
+                    
+                    // Check localStorage cache first for the session title
+                    const cachedTitle = localStorage.getItem(`session_title_${s.id}`);
+                    if (cachedTitle) {
+                        title = cachedTitle;
+                    } else {
+                        // Get title from API by getting session details
+                        // This will be loaded async after the list is rendered
+                        getTitleForSession(s.id, appName).then(sessionTitle => {
+                            if (sessionTitle && sessionTitle !== 'Neue Unterhaltung') {
+                                localStorage.setItem(`session_title_${s.id}`, sessionTitle);
+                                // Update the title in the UI if it's currently displayed
+                                const sessionElement = document.querySelector(`[data-session-id="${s.id}"] .session-title`);
+                                if (sessionElement && !localStorage.getItem(`session_alias_${s.id}`)) {
+                                    sessionElement.textContent = sessionTitle;
+                                }
+                            }
+                        }).catch(e => console.log('Failed to get session title:', e));
+                    }
+                    
+                    // Check for custom alias (override user message if renamed)
+                    const alias = localStorage.getItem(`session_alias_${s.id}`);
+                    if (alias) title = alias;
+
+                    sessionItem.setAttribute('data-session-id', s.id);
+                    sessionItem.innerHTML = `
+                        <div class="session-title">${title}</div>
+                        <div class="session-actions">
+                            <button class="kebab-btn" title="Aktionen">⋮</button>
+                            <div class="kebab-menu">
+                              <div class="kebab-item" data-action="delete">Löschen</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Session click handler
+                    sessionItem.addEventListener('click', async (e) => {
+                        if (e.target.closest('.session-actions')) return; // Don't trigger on kebab menu
+                        try {
+                            const details = await getSessionDetails(appName, userId, s.id);
+                            sessionId = details.id || s.id;
+                            closeDrawer();
+                            rebuildChatFromSessionDetails(details);
+                            saveLastSession();
+                            speechManager.updateContext?.({ appName, userId, sessionId });
+                        } catch (err) {
+                            console.error('Failed to open session', err);
+                        }
+                    });
+                    
+                    // Kebab menu handlers
+                    const kebabBtn = sessionItem.querySelector('.kebab-btn');
+                    const menu = sessionItem.querySelector('.kebab-menu');
+                    
+                    kebabBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('.kebab-menu.open').forEach(m=> m.classList.remove('open'));
+                        menu.classList.add('open');
+                    });
+                    
+                    menu.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const action = e.target.getAttribute('data-action');
+                        if (!action) return;
+                        
+                        menu.classList.remove('open');
+                        
+                        if (action === 'delete') {
+                            if (confirm('Diese Unterhaltung wirklich löschen?')) {
+                                try {
+                                    await deleteSession(appName, userId, s.id);
+                                    await populateSessionsList();
+                                } catch (err) {
+                                    console.error('Delete failed', err);
+                                    localStorage.setItem(`session_hidden_${s.id}`, '1');
+                                    await populateSessionsList();
+                                }
+                            }
+                        }
+                    });
+                    
+                    frag.appendChild(sessionItem);
+                });
+            });
+            
+            targetList.innerHTML = '';
+            targetList.appendChild(frag);
+            
+        } catch (e) {
+            console.error('Failed to list sessions', e);
+            const listEl = document.getElementById('sessions-list');
+            if (listEl) listEl.innerHTML = '<div>Fehler beim Laden der Sitzungen.</div>';
+        }
+    }
+
+    if (newSessionBtn) newSessionBtn.addEventListener('click', handleCreateNewSession);
+    function openDrawer(){ if (drawer){ drawer.classList.add('open'); } if (chatDim){ chatDim.classList.add('visible'); } }
+    function closeDrawer(){ if (drawer){ drawer.classList.remove('open'); } if (chatDim){ chatDim.classList.remove('visible'); } }
+    let isOpen = false;
+    async function toggleDrawer(){
+        if (isOpen) { closeDrawer(); isOpen = false; return; }
+        await populateSessionsList();
+        openDrawer();
+        isOpen = true;
+    }
+    if (drawerToggleBtn) drawerToggleBtn.addEventListener('click', toggleDrawer);
+    if (chatDim) chatDim.addEventListener('click', toggleDrawer);
+    
+    // Close kebab menus when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.kebab-menu') && !e.target.closest('.kebab-btn')) {
+            document.querySelectorAll('.kebab-menu.open').forEach(m => m.classList.remove('open'));
+        }
+    });
 }); 

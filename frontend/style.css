@@ -115,6 +115,8 @@ body {
     background-color: var(--header-background);
     color: white;
     padding: 1rem; /* Adjust padding as needed */
+    height: var(--chat-header-height, 64px);
+    box-sizing: border-box;
     font-size: 1.25rem;
     font-weight: bold;
     border-bottom: 1px solid var(--border-color);
@@ -307,6 +309,8 @@ body {
     background-color: #fff;
     flex-shrink: 0;
     align-items: center;
+    height: var(--chat-input-height, 64px);
+    box-sizing: border-box;
 }
 
 #chat-input {
@@ -1207,6 +1211,76 @@ body {
     max-height: calc(85vh - 120px);
 }
 
+/* Sessions list inside modal */
+#sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: none;
+    overflow-y: auto;
+}
+
+.session-item {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.session-item:hover {
+    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.session-item.active {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.session-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.session-preview {
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.session-meta {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.session-date {
+    flex: 1;
+}
+
+.session-messages {
+    margin-left: auto;
+}
+
+/* Modal active state */
+.modal.active {
+    display: flex !important;
+}
+
+/* Hide modal by default */
+.modal {
+    display: none;
+}
+
 .specialists-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1313,6 +1387,148 @@ body {
     transform: rotate(180deg);
 }
 
+/* Hide logo and agents without removing (can be toggled later) */
+#app-logo { opacity: 0; pointer-events: none; }
+#agents-selector-btn { display: none; }
+
+/* Minimal icon buttons */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 18px;
+    background: #2b2f36;
+    color: #fff;
+    border: 1px solid #3a3f46;
+}
+.icon-btn:hover { background: #323741; }
+
+/* Drawer styles - inside chat, below header (no shadow) */
+#chat-container { position: relative; --chat-header-height: 64px; --chat-input-height: 64px; }
+.drawer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--chat-header-height, 64px); /* dynamic header height */
+    bottom: 0; /* cover input when open */
+    background: #f8f9fa;
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    z-index: 11;
+    display: flex;
+    flex-direction: column;
+    border-right: none;
+    box-shadow: none; /* no side shadow */
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-content {
+    padding: 16px 12px 20px 12px;
+    overflow-y: auto;
+}
+
+/* dim overlay inside chat area */
+.chat-dim {
+    position: absolute;
+    left: 0; right: 0;
+    top: var(--chat-header-height, 64px); bottom: 0; /* dim covers input as well */
+    background: rgba(0,0,0,0.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity 200ms ease;
+    z-index: 10;
+}
+.chat-dim.visible { opacity: 1; pointer-events: auto; }
+
+/* Date group headers */
+.date-group {
+    margin: 16px 0 8px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    padding: 0 4px;
+}
+.date-group:first-child { margin-top: 0; }
+
+/* Session card in drawer - card style */
+.session-item {
+    padding: 12px 14px;
+    margin-bottom: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: all .15s ease;
+    position: relative;
+}
+.session-item:hover { 
+    border-color: #10b981; 
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+.session-item.active { 
+    border-color: #10b981; 
+    background: #f0fdf4; 
+}
+
+.session-title { 
+    font-weight: 500; 
+    color: #1a202c; 
+    margin-bottom: 0; 
+    font-size: 14px; 
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 30px; /* space for kebab menu */
+}
+.session-meta { 
+    display: flex; 
+    gap: 10px; 
+    color: #64748b; 
+    font-size: 12px; 
+    align-items: center;
+}
+
+/* Session actions (3-dots) */
+.session-actions { position: absolute; top: 8px; right: 8px; }
+.kebab-btn {
+    background: transparent; 
+    border: none; 
+    color: #64748b; 
+    cursor: pointer;
+    padding: 4px 6px; 
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+}
+.kebab-btn:hover { 
+    background: #f1f5f9; 
+    color: #1a202c; 
+}
+
+.kebab-menu {
+    position: absolute; 
+    right: 0; 
+    top: 24px;
+    min-width: 140px; 
+    background: #fff; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1); 
+    display: none;
+    z-index: 1000;
+}
+.kebab-menu.open { display: block; }
+.kebab-item { 
+    padding: 8px 12px; 
+    color: #374151; 
+    cursor: pointer; 
+    font-size: 13px;
+}
+.kebab-item:hover { background: #f9fafb; }
+.kebab-item:first-child { border-radius: 6px 6px 0 0; }
+.kebab-item:last-child { border-radius: 0 0 6px 6px; }
 
 
 /* Mobile Responsiveness for Modal */
