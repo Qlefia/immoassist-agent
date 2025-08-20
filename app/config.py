@@ -161,7 +161,9 @@ class ImmoAssistConfig:
     def _validate_required_settings(self) -> None:
         """Validate that required configuration is present."""
         # Skip validation in test environment
-        if os.getenv("PYTEST_CURRENT_TEST"):
+        import sys
+
+        if "pytest" in sys.modules or self.environment == "test":
             logger.info("Skipping config validation in test environment")
             return
 
