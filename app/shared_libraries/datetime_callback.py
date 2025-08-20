@@ -101,7 +101,7 @@ USER MESSAGE CONTAINS: Time-sensitive content requiring datetime verification.
 
 
 def _extract_user_input_for_datetime(
-    callback_context: InvocationContext,
+    callback_context: Union[InvocationContext, CallbackContext],
 ) -> Optional[str]:
     """Extract user input from invocation context for datetime detection."""
     try:

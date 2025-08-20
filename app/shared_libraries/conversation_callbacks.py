@@ -236,9 +236,11 @@ def conversation_style_enhancer_callback(
         # CRITICAL: Extract and analyze language from current LLM request
         current_user_input = None
         if llm_request and getattr(llm_request, "contents", None):
-            for content in llm_request.contents:
-                if getattr(content, "parts", None):
-                    for part in content.parts:
+            contents = llm_request.contents or []
+            for content in contents:
+                parts = getattr(content, "parts", None) or []
+                if parts:
+                    for part in parts:
                         if hasattr(part, "text") and part.text:
                             # Clean the text to get real user input
                             raw_text = part.text.strip()
@@ -311,11 +313,14 @@ def conversation_style_enhancer_callback(
 
         # Add instructions to LLM request
         if style_instructions and getattr(llm_request, "contents", None):
-            first_content = llm_request.contents[0]
-            if getattr(first_content, "parts", None):
-                original_text = getattr(first_content.parts[0], "text", "") or ""
-                enhanced_text = f"{style_instructions}\n\n{original_text}"
-                first_content.parts[0].text = enhanced_text
+            contents = llm_request.contents or []
+            if contents:
+                first_content = contents[0]
+                parts = getattr(first_content, "parts", None) or []
+                if parts:
+                    original_text = getattr(parts[0], "text", "") or ""
+                    enhanced_text = f"{style_instructions}\n\n{original_text}"
+                    parts[0].text = enhanced_text
 
         logger.info(
             f"STYLE ENHANCER: Applied language={enforced_language}, instructions='{language_block[:100]}...'"
