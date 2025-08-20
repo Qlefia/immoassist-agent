@@ -239,7 +239,7 @@ def recall_conversation(
 # --- Removed duplicate functions - use recall_conversation directly ---
 
 
-def _initialize_conversation_state(state: Dict[str, Any]) -> None:
+def _initialize_conversation_state(state: Any) -> None:
     """Initializes conversation state in ADK state storage."""
     if const.CONVERSATION_INITIALIZED not in state:
         state[const.CONVERSATION_INITIALIZED] = True
@@ -254,7 +254,7 @@ def _initialize_conversation_state(state: Dict[str, Any]) -> None:
         logger.info("Initialized conversation state")
 
 
-def _calculate_session_duration(state: Dict[str, Any]) -> str:
+def _calculate_session_duration(state: Any) -> str:
     """Calculates session duration from start time."""
     try:
         start_time_str = state.get(const.SESSION_START_TIME)

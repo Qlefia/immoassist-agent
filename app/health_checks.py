@@ -8,7 +8,7 @@ Deployment Guidelines and Google Cloud best practices.
 import asyncio
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 
 import httpx
 from google.cloud import aiplatform
@@ -50,7 +50,7 @@ class HealthCheckResult:
 class HealthChecker:
     """Comprehensive health checker for ImmoAssist components."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.timeout_seconds = 10
 
     async def check_all(self) -> Dict[str, Any]:
@@ -86,7 +86,7 @@ class HealthChecker:
                     message=f"Health check failed: {str(check)}",
                 )
             else:
-                result = check
+                result = cast(HealthCheckResult, check)
 
             results[result.service] = {
                 "status": result.status,

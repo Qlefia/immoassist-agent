@@ -280,10 +280,12 @@ def calculate_investment_return(
         if annual_expenses is None:
             maintenance = purchase_price * (DEFAULT_MAINTENANCE_COST_PERCENTAGE / 100)
             management = annual_rent * (DEFAULT_MANAGEMENT_FEE_PERCENTAGE / 100)
-            annual_expenses = maintenance + management
-            logger.debug(f"Estimated annual expenses: €{annual_expenses:,.0f}")
+            annual_expenses_value: float = maintenance + management
+            logger.debug(f"Estimated annual expenses: €{annual_expenses_value:,.0f}")
+        else:
+            annual_expenses_value = float(annual_expenses)
 
-        net_annual_income = annual_rent - annual_expenses
+        net_annual_income = annual_rent - annual_expenses_value
 
         # Financing calculations
         if financing_percentage > 0:
@@ -307,7 +309,7 @@ def calculate_investment_return(
         # German tax benefits calculation
         annual_depreciation = purchase_price * 0.02  # 2% AfA for residential
         tax_deductible_expenses = (
-            annual_expenses + annual_interest + annual_depreciation
+            annual_expenses_value + annual_interest + annual_depreciation
         )
 
         # Yield calculations
@@ -355,7 +357,7 @@ def calculate_investment_return(
             "income_analysis": {
                 "monthly_rent": round(monthly_rent, 2),
                 "annual_rent": round(annual_rent, 2),
-                "annual_expenses": round(annual_expenses, 2),
+                "annual_expenses": round(annual_expenses_value, 2),
                 "net_annual_income": round(net_annual_income, 2),
             },
             "financing_details": {

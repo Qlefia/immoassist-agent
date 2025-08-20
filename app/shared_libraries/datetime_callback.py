@@ -6,9 +6,10 @@ content and ensures the agent uses the get_current_berlin_time tool.
 """
 
 import re
-from typing import Optional
+from typing import Optional, Union, Any
 import logging
 from google.adk.agents.invocation_context import InvocationContext
+from google.adk.agents.callback_context import CallbackContext
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,9 @@ def detect_datetime_triggers(message: str) -> bool:
     return False
 
 
-def datetime_awareness_callback(callback_context: InvocationContext) -> Optional[str]:
+def datetime_awareness_callback(
+    callback_context: Union[InvocationContext, CallbackContext],
+) -> Optional[str]:
     """
     Pre-agent callback that checks for datetime triggers and adds reminder.
 
@@ -63,7 +66,7 @@ def datetime_awareness_callback(callback_context: InvocationContext) -> Optional
     is detected, stores a reminder in state to be used by style enhancer.
     """
     try:
-        state = callback_context.state
+        state = getattr(callback_context, "state", {})
 
         # Extract user input from context (using same method as existing callbacks)
         user_message = _extract_user_input_for_datetime(callback_context)
@@ -82,7 +85,12 @@ CRITICAL: The user's message contains time-sensitive content. You MUST:
 USER MESSAGE CONTAINS: Time-sensitive content requiring datetime verification.
 """
 
-            state["datetime_reminder"] = datetime_reminder
+            # Ensure state is a mutable mapping
+            if hasattr(callback_context, "state") and isinstance(state, dict):
+                state["datetime_reminder"] = datetime_reminder
+            else:
+                # If no state dict exists, skip storing to avoid attribute errors
+                pass
             logger.info("Datetime trigger detected - reminder stored in state")
 
         return None
@@ -111,11 +119,15 @@ def _extract_user_input_for_datetime(
                             if hasattr(message, "parts") and message.parts:
                                 for part in message.parts:
                                     if hasattr(part, "text") and part.text:
-                                        return part.text.strip()
+                                        return str(part.text).strip()
 
         # Fallback to state if available
-        if hasattr(callback_context, "state"):
-            return callback_context.state.get("CURRENT_USER_INPUT", None)
+        state_obj: Any = getattr(callback_context, "state", None)
+        if isinstance(state_obj, dict):
+            value = state_obj.get("CURRENT_USER_INPUT", None)
+            if isinstance(value, str):
+                return value
+            return None
 
         return None
 

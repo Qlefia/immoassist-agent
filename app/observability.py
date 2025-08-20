@@ -11,7 +11,7 @@ import functools
 import traceback
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Callable, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import threading
 import asyncio
@@ -71,11 +71,7 @@ class PerformanceMetric:
     error_type: Optional[str] = None
     user_id: Optional[str] = None
     session_id: Optional[str] = None
-    timestamp: datetime = None
-
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = datetime.now(timezone.utc)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -90,11 +86,7 @@ class UserInteraction:
     output_tokens: Optional[int] = None
     cost_estimate: Optional[float] = None
     satisfaction_score: Optional[float] = None
-    timestamp: datetime = None
-
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = datetime.now(timezone.utc)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -109,17 +101,13 @@ class ErrorEvent:
     user_id: Optional[str] = None
     session_id: Optional[str] = None
     severity: AlertSeverity = AlertSeverity.ERROR
-    timestamp: datetime = None
-
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = datetime.now(timezone.utc)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class MetricsCollector:
     """Collects and aggregates metrics for Cloud Monitoring."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._metrics: List[Metric] = []
         self._performance_metrics: List[PerformanceMetric] = []
         self._user_interactions: List[UserInteraction] = []
@@ -300,16 +288,16 @@ class ObservabilityDecorator:
 
     def monitor_agent_operation(
         self, agent_name: str, operation_name: Optional[str] = None
-    ):
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator to monitor agent operation performance."""
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             op_name = operation_name or func.__name__
 
             if asyncio.iscoroutinefunction(func):
 
                 @functools.wraps(func)
-                async def async_wrapper(*args, **kwargs):
+                async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                     start_time = time.time()
                     success = False
                     error_type = None
@@ -351,7 +339,7 @@ class ObservabilityDecorator:
             else:
 
                 @functools.wraps(func)
-                def sync_wrapper(*args, **kwargs):
+                def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
                     start_time = time.time()
                     success = False
                     error_type = None
@@ -450,7 +438,11 @@ monitor_agent = observability_decorator.monitor_agent_operation
 
 
 def track_user_interaction(
-    user_id: str, session_id: str, interaction_type: str, agent_name: str, **kwargs
+    user_id: str,
+    session_id: str,
+    interaction_type: str,
+    agent_name: str,
+    **kwargs: Any,
 ) -> None:
     """Convenience function to track user interactions."""
     interaction = UserInteraction(
@@ -468,7 +460,7 @@ def track_error(
     agent_name: str,
     operation: str,
     severity: AlertSeverity = AlertSeverity.ERROR,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Convenience function to track errors."""
     error_event = ErrorEvent(

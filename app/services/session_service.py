@@ -9,7 +9,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, MutableMapping, cast
 from google.adk.agents.callback_context import CallbackContext
 
 from ..shared_libraries import conversation_constants as const
@@ -23,7 +23,7 @@ class SessionService:
     and context management using ADK callback state patterns.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize session service with default configuration."""
         self.default_session_timeout = timedelta(hours=24)
         self.max_conversation_history = 50
@@ -316,7 +316,9 @@ class SessionService:
             Clear operation result
         """
         try:
-            state = callback_context.state
+            state_mapping: MutableMapping[str, Any] = cast(
+                MutableMapping[str, Any], callback_context.state
+            )
 
             # Clear all session data
             keys_to_clear = [
@@ -339,7 +341,7 @@ class SessionService:
             ]
 
             for key in keys_to_clear:
-                state.pop(key, None)
+                state_mapping.pop(key, None)
 
             logger.info("Session cleared successfully")
 

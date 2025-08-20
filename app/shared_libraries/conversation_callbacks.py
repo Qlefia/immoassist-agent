@@ -6,7 +6,7 @@ ADK agent patterns for state management and conversation flow control.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from datetime import datetime
 import vertexai
 from vertexai.preview.language_models import ChatModel
@@ -23,7 +23,7 @@ from . import conversation_constants as const
 logger = logging.getLogger(__name__)
 
 
-def combined_before_agent_callback(callback_context) -> Optional[str]:
+def combined_before_agent_callback(callback_context: CallbackContext) -> Optional[str]:
     """
     Composite callback combining memory initialization and conversation analysis.
     Called before each agent invocation to ensure proper context setup.
@@ -43,7 +43,9 @@ def combined_before_agent_callback(callback_context) -> Optional[str]:
         return None
 
 
-def before_agent_conversation_callback(callback_context) -> Optional[str]:
+def before_agent_conversation_callback(
+    callback_context: CallbackContext,
+) -> Optional[str]:
     """
     Callback executed before each agent invocation.
     Analyzes conversation context and updates state for persistent memory.
@@ -156,7 +158,7 @@ def before_agent_conversation_callback(callback_context) -> Optional[str]:
     return None
 
 
-def after_agent_conversation_callback(callback_context) -> None:
+def after_agent_conversation_callback(callback_context: CallbackContext) -> None:
     """
     Callback executed after agent response generation.
     Updates conversation history and context in state storage.
@@ -233,9 +235,9 @@ def conversation_style_enhancer_callback(
 
         # CRITICAL: Extract and analyze language from current LLM request
         current_user_input = None
-        if llm_request and llm_request.contents:
+        if llm_request and getattr(llm_request, "contents", None):
             for content in llm_request.contents:
-                if content.parts:
+                if getattr(content, "parts", None):
                     for part in content.parts:
                         if hasattr(part, "text") and part.text:
                             # Clean the text to get real user input
@@ -308,10 +310,10 @@ def conversation_style_enhancer_callback(
             style_instructions = f"{language_block}\n\n{style_instructions}"
 
         # Add instructions to LLM request
-        if style_instructions and llm_request.contents:
+        if style_instructions and getattr(llm_request, "contents", None):
             first_content = llm_request.contents[0]
-            if first_content.parts:
-                original_text = first_content.parts[0].text or ""
+            if getattr(first_content, "parts", None):
+                original_text = getattr(first_content.parts[0], "text", "") or ""
                 enhanced_text = f"{style_instructions}\n\n{original_text}"
                 first_content.parts[0].text = enhanced_text
 
@@ -366,7 +368,7 @@ def before_tool_conversation_callback(
     return None
 
 
-def _extract_user_input(callback_context) -> Optional[str]:
+def _extract_user_input(callback_context: CallbackContext) -> Optional[str]:
     """Extracts user input from invocation context."""
     try:
         logger.info(f"EXTRACT_INPUT: Callback context type: {type(callback_context)}")
@@ -629,7 +631,7 @@ def _clean_user_input(text: str) -> str:
     return result
 
 
-def _initialize_conversation_state(state: Dict[str, Any]) -> None:
+def _initialize_conversation_state(state: Any) -> None:
     """Initializes conversation state following ADK patterns."""
     if const.CONVERSATION_INITIALIZED not in state:
         state[const.CONVERSATION_INITIALIZED] = True
@@ -645,20 +647,21 @@ def _initialize_conversation_state(state: Dict[str, Any]) -> None:
         logger.info("Initialized conversation state")
 
 
-def _analyze_interaction_type(user_input: str, state: Dict[str, Any]) -> str:
+def _analyze_interaction_type(user_input: str, state: Any) -> str:
     """Analyzes interaction type using an LLM."""
     try:
         # Initialize Vertex AI and the ChatModel
         vertexai.init()
-        chat_model = ChatModel.from_pretrained(config.chat_model)
+        chat_model = ChatModel.from_pretrained(config.chat_model or "gemini-2.5-flash")
 
         prompt = conversation_prompts.ANALYZE_INTERACTION_TYPE_PROMPT.format(
             user_input=user_input
         )
 
         # Use the model to classify the interaction
-        response = chat_model.chat(prompt)
-        interaction_type = response.text.strip().lower()
+        chat_session = chat_model.start_chat()
+        response = chat_session.send_message(prompt)
+        interaction_type = str(response.text).strip().lower()
 
         if "greeting" in interaction_type:
             greeting_count = state.get(const.GREETING_COUNT, 0)
@@ -720,14 +723,17 @@ def _analyze_language(user_input: str) -> str:
         # For ambiguous cases, try LLM
         try:
             vertexai.init()
-            chat_model = ChatModel.from_pretrained(config.chat_model)
+            chat_model = ChatModel.from_pretrained(
+                config.chat_model or "gemini-2.5-flash"
+            )
 
             prompt = conversation_prompts.ANALYZE_LANGUAGE_PROMPT.format(
                 user_input=user_input
             )
 
-            response = chat_model.chat(prompt)
-            language_output = response.text.strip().capitalize()
+            chat_session = chat_model.start_chat()
+            response = chat_session.send_message(prompt)
+            language_output = str(response.text).strip().capitalize()
 
             supported_languages = ["Russian", "German", "English"]
             if language_output in supported_languages:
@@ -880,7 +886,7 @@ def _determine_conversation_phase(interaction_type: str, state: Dict[str, Any]) 
         return const.PHASE_EXPLORATION
 
 
-def _extract_topics_from_input(user_input: str) -> list:
+def _extract_topics_from_input(user_input: str) -> List[str]:
     """Extracts real estate topics from user input using domain patterns."""
     topics = []
     user_input_lower = user_input.lower()
@@ -939,8 +945,8 @@ def _build_style_instructions_from_state(
     interaction_type: str,
     conversation_phase: str,
     greeting_count: int,
-    topics_discussed: list,
-    user_preferences: dict,
+    topics_discussed: List[str],
+    user_preferences: Dict[str, Any],
     language_preference: str,
 ) -> str:
     """Builds style instructions based on conversation state."""

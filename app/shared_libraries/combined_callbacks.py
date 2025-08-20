@@ -114,7 +114,7 @@ def _extract_and_store_preferred_agent(callback_context: CallbackContext) -> Non
         logger.error(f"Error extracting preferred agent: {e}")
 
 
-def after_agent_conversation_callback(callback_context) -> None:
+def after_agent_conversation_callback(callback_context: CallbackContext) -> None:
     """
     Enhanced after-agent callback for cleanup and state management.
     """

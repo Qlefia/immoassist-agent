@@ -5,7 +5,7 @@ Follows KISS principle - minimal logic in callbacks, delegates to services.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
 from google.adk.agents.callback_context import CallbackContext
@@ -20,7 +20,7 @@ from .language_detector import (
 logger = logging.getLogger(__name__)
 
 
-def before_agent_callback_simple(callback_context: CallbackContext) -> Optional[str]:
+def before_agent_callback_simple(callback_context: CallbackContext) -> Optional[Any]:
     """
     Simplified before-agent callback.
     Initializes state and detects basic context without LLM calls.
@@ -108,7 +108,7 @@ def after_agent_callback_simple(callback_context: CallbackContext) -> None:
         logger.error(f"Error in after_agent_callback: {e}")
 
 
-def _initialize_conversation_state(state: dict) -> None:
+def _initialize_conversation_state(state: Any) -> None:
     """Initialize basic conversation state."""
     state[const.CONVERSATION_INITIALIZED] = True
     state[const.SESSION_START_TIME] = datetime.now().isoformat()
@@ -136,13 +136,13 @@ def _extract_user_input(callback_context: CallbackContext) -> Optional[str]:
                 elif hasattr(user_content, "parts") and user_content.parts:
                     for part in user_content.parts:
                         if hasattr(part, "text") and part.text:
-                            return part.text.strip()
+                            return str(part.text).strip()
 
         # Check state for stored input
         if hasattr(callback_context, "state"):
             stored = callback_context.state.get(const.CURRENT_USER_INPUT)
             if stored:
-                return stored
+                return str(stored)
 
         return None
 
@@ -156,7 +156,7 @@ def _extract_agent_response(callback_context: CallbackContext) -> Optional[str]:
     try:
         if hasattr(callback_context, "response") and callback_context.response:
             if hasattr(callback_context.response, "text"):
-                return callback_context.response.text
+                return str(callback_context.response.text)
 
         if hasattr(callback_context, "agent_response"):
             return str(callback_context.agent_response)
@@ -168,7 +168,7 @@ def _extract_agent_response(callback_context: CallbackContext) -> Optional[str]:
         return None
 
 
-def _add_to_message_history(state: dict, user_input: str) -> None:
+def _add_to_message_history(state: Any, user_input: str) -> None:
     """Add message to conversation history."""
     message_history = state.get("message_history", [])
 

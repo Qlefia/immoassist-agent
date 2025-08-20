@@ -6,7 +6,7 @@ including current market data, legal changes, and time-sensitive calculations.
 """
 
 from datetime import datetime
-import pytz
+from zoneinfo import ZoneInfo
 from typing import Dict, Any
 from google.adk.tools import FunctionTool
 
@@ -36,11 +36,8 @@ def get_current_berlin_time() -> Dict[str, Any]:
             "formatted_date": "19. Dezember 2024"
         }
     """
-    # Get Berlin timezone
-    berlin_tz = pytz.timezone("Europe/Berlin")
-
-    # Get current time in Berlin
-    now_berlin = datetime.now(berlin_tz)
+    # Get current time in Berlin using standard library zoneinfo
+    now_berlin = datetime.now(ZoneInfo("Europe/Berlin"))
 
     # German day names
     german_days = {

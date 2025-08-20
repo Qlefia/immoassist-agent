@@ -14,7 +14,7 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-python-dotenv]
+        additional_dependencies: [types-requests]
         args: [--config-file=pyproject.toml]
 
   # General quality checks
