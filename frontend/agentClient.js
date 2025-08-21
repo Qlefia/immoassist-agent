@@ -23,7 +23,7 @@ export async function sendTextMessage({ appName, userId, sessionId, message, pre
     requestBody.preferredAgent = preferredAgent;
   }
 
-  const response = await fetch(`${API_BASE_URL}/run_sse`, {
+  const response = await fetch(`${API_BASE_URL}/agent/run_sse`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody),
@@ -76,4 +76,4 @@ export async function sendTextMessage({ appName, userId, sessionId, message, pre
       break;
     }
   }
-} 
+}

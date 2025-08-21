@@ -97,7 +97,7 @@ export async function generateAndPlayVoiceChatTTS(text) {
     console.log('Generating TTS for text length:', text.length, 'characters');
     const startTime = performance.now();
 
-    const response = await fetch(`${API_BASE_URL}/tts-stream`, {
+    const response = await fetch(`${API_BASE_URL}/agent/tts-stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -259,4 +259,4 @@ export function getVoiceChatActive() {
  */
 export function getLastTTS() {
   return lastTTS;
-} 
+}
