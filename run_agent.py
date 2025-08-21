@@ -152,26 +152,21 @@ def create_app() -> FastAPI:
         version="1.0.0",
     )
 
-    # Create ADK FastAPI app as sub-application
-    # Convert the Path object to a string and explicitly point to the "agents" directory.
-    # get_fast_api_app expects a string path and internally performs string operations
-    # (e.g., rstrip), which will fail if a pathlib.Path object is supplied.
-    # The ADK expects the directory that *contains* individual agent packages.
-    # In this repository, that is the project root directory (script_dir), not
-    # the nested "agents" folder.
+    # Create ADK FastAPI app with standard configuration
+    # ADK automatically handles session management and conversation persistence
     agents_path = str(script_dir)
-    # For now, use default in-memory sessions (since VertexAiSessionService requires
-    # special setup that isn't directly supported by get_fast_api_app)
-    # TODO: Explore setting up VertexAiSessionService after app creation
 
-    # Optional: use database session service if specified
-    session_service_uri = os.getenv("SESSION_SERVICE_URI")
-
+    # Standard ADK configuration following best practices
     adk_app = get_fast_api_app(
         agents_dir=agents_path,
         web=True,  # Enable web interface
         allow_origins=["*"],  # Allow all origins for development
-        **({"session_service_uri": session_service_uri} if session_service_uri else {}),
+        # ADK automatically uses InMemorySessionService for local development
+        # This should provide automatic conversation context through include_contents='default'
+    )
+
+    logger.info(
+        "ADK app created with built-in session management - context should work automatically"
     )
 
     # Add TTS streaming endpoint on main app (before mounting ADK)

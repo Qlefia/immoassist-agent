@@ -77,6 +77,7 @@ knowledge_specialist = Agent(
     name="KnowledgeSpecialist",
     instruction=KNOWLEDGE_SPECIALIST_PROMPT,
     tools=[search_knowledge_base, get_current_berlin_time],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Property Specialist Agent for property search and analysis
@@ -89,6 +90,7 @@ property_specialist = Agent(
         get_property_details,
         get_current_berlin_time,
     ],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Calculator Specialist Agent for investment calculations
@@ -97,6 +99,7 @@ calculator_specialist = Agent(
     name="CalculatorSpecialist",
     instruction=CALCULATOR_SPECIALIST_PROMPT,
     tools=[calculate_investment_return, get_current_berlin_time],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Market Analyst Agent for market trend analysis
@@ -105,6 +108,7 @@ market_analyst = Agent(
     name="MarketAnalyst",
     instruction=MARKET_ANALYST_PROMPT,
     tools=[get_current_berlin_time],  # Analysis based on provided data and current time
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Legal Specialist Agent for German real estate law
@@ -113,6 +117,7 @@ legal_specialist = Agent(
     name="LegalSpecialist",
     instruction=LEGAL_SPECIALIST_PROMPT,
     tools=[search_legal_rag, get_current_berlin_time],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Presentation Specialist Agent for course materials
@@ -121,6 +126,7 @@ presentation_specialist = Agent(
     name="PresentationSpecialist",
     instruction=PRESENTATION_SPECIALIST_PROMPT,
     tools=[search_presentation_rag, get_current_berlin_time],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 
@@ -155,6 +161,7 @@ coordination_specialist = Agent(
     tools=_build_coordination_tools(),
     before_agent_callback=enhanced_before_agent_callback,
     after_agent_callback=after_agent_conversation_callback,
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Initialize Root Agent as main orchestrator with specialized sub-agents
@@ -176,6 +183,7 @@ root_agent = Agent(
         get_current_berlin_time,  # Current Berlin time utility
         recall_conversation,  # Enhanced conversation memory access
     ],
+    include_contents="default",  # Ensure conversation context is included
 )
 
 # Note: initialize_conversation_memory_callback is used as a callback function
