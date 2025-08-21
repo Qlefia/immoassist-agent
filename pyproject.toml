@@ -22,7 +22,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-google-adk = {extras = ["vertexai"], version = "^1.0.0"}
+google-adk = "^1.7.0"
 google-cloud-aiplatform = "^1.100.0"
 pydantic = "^2.5.0"
 fastapi = "^0.115.0"
